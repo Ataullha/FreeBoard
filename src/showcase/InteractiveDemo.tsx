@@ -14,6 +14,8 @@ import { attachPenInput } from '../editor/penInput';
 import { attachGrowingEraser } from '../editor/growingEraser';
 import { LocalClock } from '../ui/LocalClock';
 import { backupBlob, download } from '../io/export';
+import { validateElements, validateFiles } from '../io/validation';
+import { imageDimensions } from '../io/images';
 import {
   ArrowUpRight,
   Download,
@@ -116,7 +118,11 @@ function DemoCanvas({
     const stopPen = attachPenInput(host.current, ink.current, {
       editor: () => api,
       highlighter: () => marker.current,
-      start: () => {},
+      start: () => {
+        host.current
+          ?.querySelector<HTMLElement>('.excalidraw')
+          ?.focus({ preventScroll: true });
+      },
       finish: () => {},
     });
     const stopEraser = attachGrowingEraser(host.current, cursor.current, {
@@ -255,11 +261,29 @@ function DemoCanvas({
           aiEnabled={false}
           validateEmbeddable={false}
           onLinkOpen={(_, event) => event.preventDefault()}
-          onPaste={(data) =>
-            !data.elements?.length &&
-            !data.files &&
-            !data.mixedContent?.some((item) => item.type === 'imageUrl')
-          }
+          onPaste={async (data) => {
+            try {
+              if (data.mixedContent?.some((item) => item.type === 'imageUrl'))
+                throw new Error(
+                  'Paste a local image or editable objects instead of a remote image link.',
+                );
+              if (data.elements)
+                data.elements = validateElements(data.elements);
+              if (data.files) {
+                data.files = validateFiles(data.files);
+                for (const file of Object.values(data.files))
+                  await imageDimensions(file.dataURL);
+              }
+              return true;
+            } catch (error) {
+              setNotice(
+                error instanceof Error
+                  ? error.message
+                  : 'This clipboard content could not be pasted.',
+              );
+              return false;
+            }
+          }}
           UIOptions={{
             canvasActions: {
               loadScene: false,
