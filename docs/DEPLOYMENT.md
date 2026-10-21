@@ -5,10 +5,13 @@ FreeBoard is a static app. The supplied `dist/` directory needs no backend, data
 ## Live GitHub Pages deployment
 
 - Application: <https://ataullha.github.io/FreeBoard/>
+- Interactive product preview: <https://ataullha.github.io/FreeBoard/preview.html>
 - Source: <https://github.com/Ataullha/FreeBoard>
 - Portfolio and deployment workflow: <https://github.com/Ataullha/ataullha.github.io>
 
 The portfolio repository's `.github/workflows/pages.yml` checks out both repositories, installs the locked app dependencies, runs formatting/type/tests/build/audit, copies `dist/` into `/FreeBoard/`, and deploys the combined site through GitHub Pages Actions. The Classroom resources link remains intact, with a separate FreeBoard icon beside it.
+
+The build includes both `index.html` and `preview.html`. Preserve `showcase/` alongside the bundled assets so preview posters and the 1200 × 630 Open Graph image load. The main app still opens directly to drawing. `share-card.html` and `showcase-qa.html` are source/development tools, not production routes. For a fork on another origin, update the absolute Open Graph/canonical URLs in the two entry HTML files before building.
 
 For an app-source-only update, first let FreeBoard CI pass, then open the portfolio repository → Actions → **Publish portfolio and FreeBoard** → **Run workflow**. Use `main` or a reviewed commit in `freeboard_ref`. A portfolio `main` push also publishes. The app repository's own CI retains a build artifact and does not deploy by itself. In the portfolio repository's Settings → Pages, the source must be **GitHub Actions**. The workflow uses scoped, short-lived Actions permissions; no private key belongs in frontend code.
 

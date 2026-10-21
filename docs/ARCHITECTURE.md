@@ -14,6 +14,12 @@ FreeBoard is a static React 18 / TypeScript / Vite application. The pinned Excal
 | `src/App.tsx`               | Editor adapter, lifecycle coordination, shortcuts, error/recovery controls                                             |
 | `src/pwa.ts`, `scripts/`    | Update prompting, static asset preparation and versioned offline cache                                                 |
 
+## Product preview
+
+`preview.html` is a separate Vite entry point. `src/showcase/main.tsx` owns the lightweight product presentation and lazy-loads `InteractiveDemo.tsx` on request. The demo uses Excalidraw and the existing pen/eraser adapters. Each template gets a keyed editor instance; a memory map retains its scene while switching. Controls that require the scene wait for initialization, preventing a download from capturing the previous editor during a rapid switch. No repository, autosave, board lease, preference write or worker registration is started by the preview. Its editable download uses the normal versioned document model and export code. Reset recreates only that demo instance.
+
+`launchArtwork.ts` defines the 1200 × 630 social image in Canvas drawing commands. The owner-facing `share-card.html` can export that artwork with the locally bundled fonts and actual app screenshot. The final PNG is a static asset shared by the README and Open Graph metadata. All runtime assets remain local, and no dependency or paid service is added.
+
 ## Documents and history
 
 Document version 2 stores immutable scene snapshots at persistence boundaries. Native editor history remains in memory; a continuous stroke or drag is one history action. Application insertions capture one immediate native history action. Text composition and editing use the native textarea; custom shortcuts ignore editable targets and composition events. History is intentionally reset when switching/reloading boards; persisted documents, rather than undo stacks, survive refresh.
