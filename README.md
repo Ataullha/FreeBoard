@@ -9,14 +9,16 @@
 A private, open-source whiteboard for lessons, sketches, and clearer thinking.
 Open your browser and start. No account, payment, API key, or backend required.
 
-[**Open FreeBoard ↗**](https://ataullha.github.io/FreeBoard/) · [User guide](docs/USER_GUIDE.md) · [Contribute](CONTRIBUTING.md) · [Report a bug](https://github.com/Ataullha/FreeBoard/issues)
+[**Open FreeBoard ↗**](https://ataullha.github.io/FreeBoard/) · [Try the interactive preview](https://ataullha.github.io/FreeBoard/preview.html) · [User guide](docs/USER_GUIDE.md) · [Contribute](CONTRIBUTING.md)
 
 [![FreeBoard checks](https://github.com/Ataullha/FreeBoard/actions/workflows/ci.yml/badge.svg)](https://github.com/Ataullha/FreeBoard/actions/workflows/ci.yml)
 [MIT licensed](LICENSE)
 
 </div>
 
-![FreeBoard showing an editable lesson with Bengali and English text](docs/previews/lesson.jpg)
+[![FreeBoard — Make space for ideas. The real whiteboard with an editable Bengali/English lesson and pen controls.](public/showcase/freeboard-launch.png)](https://ataullha.github.io/FreeBoard/preview.html)
+
+**[Explore the interactive product preview ↗](https://ataullha.github.io/FreeBoard/preview.html)** — choose a lesson, brainstorming board or connected flowchart, then draw and edit with the real engine. Preview edits stay in the tab and can be downloaded as an editable backup. Saved boards are unaffected. The full app opens directly to the whiteboard.
 
 ## A clear workspace
 

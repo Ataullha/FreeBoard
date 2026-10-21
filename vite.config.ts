@@ -4,7 +4,11 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   server: { host: '0.0.0.0', port: 4173, allowedHosts: ['terminal.local'] },
-  build: { target: 'es2022', chunkSizeWarningLimit: 2800 },
+  build: {
+    target: 'es2022',
+    chunkSizeWarningLimit: 2800,
+    rollupOptions: { input: { app: 'index.html', preview: 'preview.html' } },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
