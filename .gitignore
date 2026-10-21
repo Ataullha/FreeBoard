@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+artifacts/
+*.log
+.DS_Store
+.env*
+!.env.example
+.openai/
+.sites-runtime/
+
+# Generated vendor assets are recreated by predev/prebuild from locked packages.
+public/excalidraw/
+public/*.wasm
+public/THIRD_PARTY_NOTICES.txt

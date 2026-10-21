@@ -1,0 +1,6 @@
+node_modules
+dist
+public
+THIRD_PARTY_NOTICES.txt
+package-lock.json
+artifacts
