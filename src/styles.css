@@ -1600,3 +1600,13 @@ input[type='checkbox'] {
 .mobile-zoom > span {
   font-variant-numeric: tabular-nums;
 }
+
+/* The live stylus preview is separate from the static scene and never intercepts input. */
+.pen-ink-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}

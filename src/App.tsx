@@ -67,6 +67,7 @@ import {
   filename,
   thumbnail,
 } from './io/export';
+import { attachPenInput } from './editor/penInput';
 import { stickyElements, templateElements } from './editor/templates';
 import type { TemplateId } from './editor/templates';
 import { BoardLibrary } from './ui/BoardLibrary';
@@ -149,6 +150,8 @@ export default function App() {
     readonlyRef = useRef(false),
     marker = useRef(false),
     signature = useRef('');
+  const canvasHost = useRef<HTMLElement>(null),
+    inkCanvas = useRef<HTMLCanvasElement>(null);
   const fileInput = useRef<HTMLInputElement>(null),
     imageInput = useRef<HTMLInputElement>(null),
     switching = useRef(false),
@@ -170,6 +173,34 @@ export default function App() {
           },
     [initial],
   );
+  useEffect(() => {
+    if (!initial || !canvasHost.current || !inkCanvas.current) return;
+    return attachPenInput(canvasHost.current, inkCanvas.current, {
+      editor: () => api.current,
+      highlighter: () => marker.current,
+      start: (element) => {
+        autosave.current?.beginInteraction();
+        autosave.current?.capture({
+          ...scene(),
+          elements: [
+            ...(api.current?.getSceneElementsIncludingDeleted() ?? []),
+            element,
+          ],
+        });
+        setEmpty(false);
+      },
+      finish: (element) => {
+        autosave.current?.capture({
+          ...scene(),
+          elements: [
+            ...(api.current?.getSceneElementsIncludingDeleted() ?? []),
+            element,
+          ],
+        });
+        autosave.current?.endInteraction();
+      },
+    });
+  }, [initial, scene]);
   const refreshLibrary = useCallback(async () => {
     setLibraryLoading(true);
     try {
@@ -703,6 +734,27 @@ export default function App() {
       document.removeEventListener('paste', paste, true);
     };
   }, [addSticky, chooseTool, flush, insertImage, modal, presentation, busy]);
+  const bindEditor = useCallback((editor: ExcalidrawImperativeAPI) => {
+    api.current = editor;
+    for (const name of [
+      'changeArrowType',
+      'hyperlink',
+      'addToLibrary',
+      'wrapSelectionInFrame',
+      'setFrameAsActiveTool',
+      'setEmbeddableAsActiveTool',
+      'copyElementLink',
+      'linkToElement',
+    ] as ActionName[])
+      editor.registerAction({
+        name,
+        label: 'Unavailable',
+        perform: () => false,
+        predicate: () => false,
+        keyTest: () => false,
+        trackEvent: false,
+      });
+  }, []);
   const onChange = useCallback(
     (
       elements: readonly ExcalidrawElement[],
@@ -943,6 +995,7 @@ export default function App() {
         </div>
       )}
       <main
+        ref={canvasHost}
         className="canvas-area"
         aria-label="Whiteboard workspace"
         onDragOver={(e) => {
@@ -958,27 +1011,7 @@ export default function App() {
         {initial ? (
           <Excalidraw
             key={`${initial.board.id}:${initial.epoch}`}
-            excalidrawAPI={(editor) => {
-              api.current = editor;
-              for (const name of [
-                'changeArrowType',
-                'hyperlink',
-                'addToLibrary',
-                'wrapSelectionInFrame',
-                'setFrameAsActiveTool',
-                'setEmbeddableAsActiveTool',
-                'copyElementLink',
-                'linkToElement',
-              ] as ActionName[])
-                editor.registerAction({
-                  name,
-                  label: 'Unavailable',
-                  perform: () => false,
-                  predicate: () => false,
-                  keyTest: () => false,
-                  trackEvent: false,
-                });
-            }}
+            excalidrawAPI={bindEditor}
             initialData={{
               elements: initial.board.elements,
               files: initial.files,
@@ -1032,9 +1065,6 @@ export default function App() {
                   captureUpdate: CaptureUpdateAction.NEVER,
                 });
             }}
-            onPointerUp={() => {
-              if (!readonlyRef.current) void autosave.current?.checkpoint();
-            }}
             UIOptions={{
               canvasActions: {
                 loadScene: false,
@@ -1055,6 +1085,7 @@ export default function App() {
             <span>Opening your workspace…</span>
           </div>
         )}
+        <canvas ref={inkCanvas} className="pen-ink-layer" aria-hidden="true" />
         {!presentation && !readOnly && initial && (
           <div className="tool-dock" role="toolbar" aria-label="Drawing tools">
             {tools.map((t) => (
