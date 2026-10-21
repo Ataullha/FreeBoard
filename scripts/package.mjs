@@ -18,6 +18,7 @@ const files = [
   'index.html',
   'qa.html',
   'journeys.html',
+  'inking.html',
   'README.md',
   'CONTRIBUTING.md',
   'CODE_OF_CONDUCT.md',
