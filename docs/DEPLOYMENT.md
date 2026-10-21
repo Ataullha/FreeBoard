@@ -1,8 +1,24 @@
-# Deployment on Cloudflare Pages
+# Static deployment
 
 FreeBoard is a static app. The supplied `dist/` directory needs no backend, database, environment secrets or build-time API keys. Hosting does not store or synchronize users' boards; each visitor uses local browser storage.
 
-## Direct upload
+## Live GitHub Pages deployment
+
+- Application: <https://ataullha.github.io/FreeBoard/>
+- Source: <https://github.com/Ataullha/FreeBoard>
+- Portfolio and deployment workflow: <https://github.com/Ataullha/ataullha.github.io>
+
+The portfolio repository's `.github/workflows/pages.yml` checks out both repositories, installs the locked app dependencies, runs formatting/type/tests/build/audit, copies `dist/` into `/FreeBoard/`, and deploys the combined site through GitHub Pages Actions. The Classroom resources link remains intact, with a separate FreeBoard icon beside it.
+
+For an app-source-only update, first let FreeBoard CI pass, then open the portfolio repository → Actions → **Publish portfolio and FreeBoard** → **Run workflow**. Use `main` or a reviewed commit in `freeboard_ref`. A portfolio `main` push also publishes. The app repository's own CI retains a build artifact and does not deploy by itself. In the portfolio repository's Settings → Pages, the source must be **GitHub Actions**. The workflow uses scoped, short-lived Actions permissions; no private key belongs in frontend code.
+
+The previous `/FreePod/` address remains a redirect. Its compatibility worker waits for the existing app's normal Save & restart action before activation, then sends navigation to `/FreeBoard/`. It keeps old cached assets available for tabs already open. It never clears board storage. Both paths share the same origin and IndexedDB, so saved boards remain accessible. An old installed shortcut may retain its original launch URL and follow the redirect; reinstall from the new address to update that shortcut.
+
+For your own GitHub Pages site, copy the same static build to your selected path or adapt the workflow's repository/path names. The build uses relative asset URLs and the manifest uses relative scope/start URLs, supporting root or subdirectory hosting. GitHub Pages does not interpret Cloudflare's `_headers` file; use a host with configurable headers if response-header CSP is required.
+
+GitHub Pages' [official limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits), checked 21 October 2026, include a 1 GB published-site limit and a soft 100 GB/month bandwidth limit; custom Actions publishing is exempt from the soft 10 builds/hour limit. Account Actions quotas and [GitHub's terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) still apply. Static hosting does not provide authentication, backend storage, or collaboration.
+
+## Cloudflare Pages direct upload
 
 1. Use the supplied `FreeBoard-dist.zip`, or run `npm ci`, `npm run build` and `npm run package` to recreate it.
 2. Sign in to your own Cloudflare account. Open Workers & Pages and create a Pages application using the Direct Upload / drag-and-drop path.
@@ -27,14 +43,14 @@ Create your own repository from the source directory and commit its source, lock
 
 In Cloudflare Pages, connect your repository and choose:
 
-| Setting | Value |
-| --- | --- |
-| Framework preset | Vite (or None with the settings below) |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Root directory | Repository root containing `package.json` |
-| Node version | `24` via `NODE_VERSION` if the build environment needs it |
-| Production branch | Your chosen default branch |
+| Setting                | Value                                                     |
+| ---------------------- | --------------------------------------------------------- |
+| Framework preset       | Vite (or None with the settings below)                    |
+| Build command          | `npm run build`                                           |
+| Build output directory | `dist`                                                    |
+| Root directory         | Repository root containing `package.json`                 |
+| Node version           | `24` via `NODE_VERSION` if the build environment needs it |
+| Production branch      | Your chosen default branch                                |
 
 Use `npm ci` for reproducible installs. No `.env` file is required. Add your own custom domain only after checking deployment and exporting any boards you need to move from the old origin.
 
@@ -50,6 +66,6 @@ Serve over HTTPS (localhost is also trustworthy). `npm run preview` serves the a
 
 Publish a second build while the first is open. A refresh discovers the waiting worker; use Save & restart when offered. Verify the saved board remains. Do not force `skipWaiting` automatically or clear IndexedDB during deployments. Rolling back app assets should use a compatible document version; future-version documents are intentionally not downgraded.
 
-`public/_headers` provides CSP, MIME sniffing and referrer protections and avoids caching `sw.js`/`index.html` indefinitely. Other static hosts must apply equivalent headers. Disable any host-injected analytics or scripts unless you intentionally update the CSP and privacy policy. Deploy at the origin root; a subdirectory deployment needs matching Vite base and manifest scope changes.
+`public/_headers` provides CSP, MIME sniffing and referrer protections and avoids caching `sw.js`/`index.html` indefinitely. Other static hosts must apply equivalent headers. Disable any host-injected analytics or scripts unless you intentionally update the CSP and privacy policy. The relative Vite base and manifest scope support root or subdirectory deployment. Keep all build files together beneath the chosen path; verify the manifest, worker scope and relative font/image URLs there.
 
 Before announcing a public launch, complete the physical-device, Safari/Firefox, HTTPS offline-install and service-worker update checks listed in `VERIFICATION.md`. These need environments not available in this build session.

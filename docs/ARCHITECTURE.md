@@ -1,18 +1,18 @@
 # Architecture
 
-FreeBoard is a static React 18 / TypeScript / Vite application. The pinned Excalidraw 0.18.1 MIT editor handles drawing, coordinate transforms, hit testing, selection, bound connectors, native history and raster/vector rendering. FreeBoard owns the product shell, strict import boundary, board lifecycle, persistence and offline delivery. This choice avoids reimplementing complex pointer and text behavior.
+FreeBoard is a static React 18 / TypeScript / Vite application. The pinned Excalidraw 0.18.1 MIT editor handles drawing, coordinate transforms, hit testing, selection, bound connectors, native history and raster/vector rendering. FreeBoard owns the product shell, strict import boundary, board lifecycle, persistence and offline delivery. A pen-only canvas adapter collects coalesced pressure samples outside React, paints the active stroke once per animation frame with the engine’s own freehand outline, and commits one native editable/history object on pen lift. Mouse, finger gestures, selection, shapes, text and connectors use the native engine. Palm contacts cannot cancel an active stylus stroke; rejected contacts stay rejected through their release. Hover rejection has a short 350 ms grace period. A palm arriving before any pen proximity is not distinguishable from intentional finger input.
 
-| Module | Responsibility |
-| --- | --- |
-| `src/model/` | Versioned BoardRecord/BoardBackup, scene selection closure, export references, coordinate helpers, safe IDs |
-| Excalidraw / `src/editor/` | Native rendering, tools, selection, undo/redo, text and arrow bindings; editable starter templates and sticky creation |
-| `src/storage/repository.ts` | IndexedDB transactions, schema upgrades, board-scoped assets, CAS revisions, trash and recovery |
-| `src/storage/autosave.ts` | Debouncing, serialized writes, dirty generations, retry and truthful status |
-| `src/storage/lease.ts` | Web Locks editing lease, with revision protection as fallback |
-| `src/io/` | JSON validation, image signatures/dimensions, sanitized clipboard, editable/raster/vector export |
-| `src/ui/` | Accessible native dialogs, board library, export preparation and help |
-| `src/App.tsx` | Editor adapter, lifecycle coordination, shortcuts, error/recovery controls |
-| `src/pwa.ts`, `scripts/` | Update prompting, static asset preparation and versioned offline cache |
+| Module                      | Responsibility                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `src/model/`                | Versioned BoardRecord/BoardBackup, scene selection closure, export references, coordinate helpers, safe IDs            |
+| Excalidraw / `src/editor/`  | Native rendering, tools, selection, undo/redo, text and arrow bindings; editable starter templates and sticky creation |
+| `src/storage/repository.ts` | IndexedDB transactions, schema upgrades, board-scoped assets, CAS revisions, trash and recovery                        |
+| `src/storage/autosave.ts`   | Debouncing, serialized writes, dirty generations, retry and truthful status                                            |
+| `src/storage/lease.ts`      | Web Locks editing lease, with revision protection as fallback                                                          |
+| `src/io/`                   | JSON validation, image signatures/dimensions, sanitized clipboard, editable/raster/vector export                       |
+| `src/ui/`                   | Accessible native dialogs, board library, export preparation and help                                                  |
+| `src/App.tsx`               | Editor adapter, lifecycle coordination, shortcuts, error/recovery controls                                             |
+| `src/pwa.ts`, `scripts/`    | Update prompting, static asset preparation and versioned offline cache                                                 |
 
 ## Documents and history
 
@@ -26,7 +26,7 @@ IndexedDB database `boardpilot` (retained through the FreeBoard rename) has stor
 
 Assets are keyed by board ID and asset ID, preventing an imported image ID from changing another board's image. A checkpoint checks the current saved revision and writes assets plus a writer-scoped draft in one transaction. Main save checks the same revision, writes board/assets atomically, increments revision and removes only the saving writer's draft. Failed writes leave the last committed document intact. No “Saved” state is emitted before the transaction completes.
 
-Autosave schedules a draft after 180 ms and a main save after 650 ms of inactivity, with an additional checkpoint on pointer-up. Writes are serialized. A generation counter keeps edits made during a write dirty, and preserves a rename made during an in-flight save. The page attempts a flush on visibility loss and warns on unload while dirty; browsers do not guarantee asynchronous work during abrupt shutdown. Recovery protects committed checkpoints, not every last keystroke before a crash.
+Autosave schedules a draft after 180 ms and a main save after 650 ms of inactivity, after the latest edit. Stylus contact pauses background draft/save timers; lifting the pen restarts the idle window. It does not enqueue a full checkpoint for every letter. Repeated checkpoint requests coalesce, and an already checkpointed generation is skipped. Visibility loss, cancellation and focus loss commit the current pen stroke before recovery writes. Writes are serialized. A generation counter keeps edits made during a write dirty, and preserves a rename made during an in-flight save. The page attempts a flush on visibility loss and warns on unload while dirty; browsers do not guarantee asynchronous work during abrupt shutdown. Recovery protects committed checkpoints, not every last keystroke before a crash.
 
 Web Locks obtains an exclusive editing lease per board when available. BroadcastChannel informs other tabs of newer revisions. CAS checks are the final protection on every writer, including browsers without either API. A conflict switches the editor to view mode and preserves its scene for export/copy. Dirty conflicts cannot silently switch away. Stale drafts remain separately rescuable.
 

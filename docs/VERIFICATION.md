@@ -2,6 +2,20 @@
 
 Release candidate 1.0.0 • 21 October 2026. Results are measurements and observations from this build session, not a certification or a guarantee on untested devices.
 
+## Stylus handwriting repair — 21 October 2026
+
+A user report identified poor stylus handwriting despite earlier mouse-oriented checks. Those checks did not establish physical stylus quality. Investigation found that a palm touch in Excalidraw 0.18.1 could cancel and remove a short active freehand stroke. The host also requested a full recovery checkpoint after every pointer-up.
+
+The repair adds a pen-only input adapter: coalesced samples and pressure are buffered outside React, active ink is painted on a separate canvas using the engine's own freehand outline, and pen lift commits one editable native history object. Pointer cancellation and focus/visibility loss commit received ink. A tiny second point preserves pen-tap dots through the engine's restore logic. Palm contacts during pen contact or within 350 ms of pen hover are rejected until their lift. Touch before any pen proximity remains ordinary finger input. Mouse, finger gestures, shapes, selection and erasing use the existing engine. Save timers pause during stylus contact and resume after idle; pointer-up no longer queues a full recovery write.
+
+**Automated:** 48 tests across 8 suites pass. New coverage includes coalesced/absent/empty sample APIs, pressure fallback, transformed bounds, long-stroke normalization, taps, pen/palm routing, cancellation, view mode, spacebar, deferred saves and duplicate checkpoint coalescing. Existing history, connectors, validation, storage recovery, quota failure and service-worker checks remain passing. All 11 full-app journeys also pass on the repaired app (`verification/stylus-app-journeys.json`): import, keyboard style presets, image backup, Bengali/English composition, text history, reload/round trip, duplicate/trash/restore, invalid imports, storage failure/retry, tab conflict and desktop/tablet/mobile layouts.
+
+**Real app browser harness:** `npm run dev`, open `/inking.html`, click **Run pen regression**. It creates a separate QA board in the current browser; existing boards are preserved. `verification/pen-input.json` records the final run in Chromium 154 on Linux. Scene: 600 objects (200 rectangles, 200 ellipses, 200 text objects), then pen input. Twenty-four short strokes have eight move dispatches each, each carrying four coalesced samples plus the dispatch endpoint. The native baseline lost the palm-interrupted stroke and wrote to IndexedDB 24 times during 24 strokes. The repaired run retained the palm stroke, 42 points and 42 pressure values in the last test stroke, and made zero store puts during the continuous writing sequence. Undo removed one whole stroke and redo restored it. Cancellation, a dot and subsequent finger drawing brought the count to 28; all 28 reopened after refresh. PNG/SVG preparation through the real export dialog succeeded (187,135 / 609,575 bytes; 930 / 367 ms including UI waits in this run).
+
+The repaired run's synchronous DOM dispatch median/p95 was 0.10/1.70 ms. Remote animation frame median/p95 was approximately 156/1,016 ms even with `visibilityState` reporting visible, so these measurements **do not establish physical input-to-pixel latency, frame rate or perceived smoothness**. Earlier mouse checks and synthetic input are not a physical stylus certification. Chrome/Edge hardware, Android tablets, iPad/Safari, palm-before-hover behavior and pressure feel still require owner testing on real devices. No benchmark claim is invented for those environments.
+
+The main content origin and IndexedDB namespace are retained while the canonical route becomes `/FreeBoard/`. A compatibility worker at the old route waits for explicit update activation, keeps old cached assets for active tabs, and redirects subsequent navigation. It does not delete documents. The public README uses actual application screenshots and links to the canonical app/source.
+
 ## FreeBoard final monochrome release
 
 The application is renamed FreeBoard across its interface, page titles, install manifest, icons, exported filenames, source package, documentation and CI. The interface, starter illustrations, new template boards and default canvas are monochrome. Inter typography and Noto Sans Bengali remain bundled locally. Existing artwork and image colors are preserved.
@@ -21,15 +35,15 @@ The new verification records are `verification/freeboard-editor-checks.json` and
 
 `npm ci` succeeded from a separate clean copy of the project. TypeScript passed. All **36 tests in six suites passed**. `npm run check` successfully produced the static build from that clean install. Its build manifest and cache hash matched the delivered production build exactly. Source formatting passed. The production dependency audit reported **zero known vulnerabilities** on 21 October 2026; retain the lockfile and repeat the audit before future releases.
 
-| Area | Checks |
-| --- | --- |
-| Coordinates | Scene/viewport round trips, pan/zoom offsets, pointer-anchored zoom and clamping |
-| Serialization | Bengali/English text, images, styles and attached-arrow references; selected-object reference closure; v1 migration and v2 round trip |
-| Validation | Malformed/future documents, nonfinite values, invalid IDs/types, remote and SVG images, active metadata, missing image assets |
-| IndexedDB | Atomic create/save, duplicate, trash/restore, draft recovery, stale-draft rescue, concurrent revision rejection, legacy storage migration, same image ID isolated across boards |
-| Autosave | Failure remains dirty, no false Saved, retry, edits and renames during in-flight writes, initially unavailable storage |
-| Images | Signature, dimensions and pixel budgets checked before image decoding |
-| Service worker | Complete install, failed asset install, offline navigation/assets, cross-origin exclusion, deliberate update activation, old lazy chunks retained for multiple tabs |
+| Area           | Checks                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coordinates    | Scene/viewport round trips, pan/zoom offsets, pointer-anchored zoom and clamping                                                                                                |
+| Serialization  | Bengali/English text, images, styles and attached-arrow references; selected-object reference closure; v1 migration and v2 round trip                                           |
+| Validation     | Malformed/future documents, nonfinite values, invalid IDs/types, remote and SVG images, active metadata, missing image assets                                                   |
+| IndexedDB      | Atomic create/save, duplicate, trash/restore, draft recovery, stale-draft rescue, concurrent revision rejection, legacy storage migration, same image ID isolated across boards |
+| Autosave       | Failure remains dirty, no false Saved, retry, edits and renames during in-flight writes, initially unavailable storage                                                          |
+| Images         | Signature, dimensions and pixel budgets checked before image decoding                                                                                                           |
+| Service worker | Complete install, failed asset install, offline navigation/assets, cross-origin exclusion, deliberate update activation, old lazy chunks retained for multiple tabs             |
 
 Worker tests run the actual worker template in a simulated worker/cache environment. They do not replace a real installed-PWA test.
 
@@ -65,16 +79,16 @@ The FreeBoard production build contains 395 files, about 22.72 MiB of assets, an
 
 The final FreeBoard build was measured in the same deterministic 600-object development scene. `verification/freeboard-performance.json` records the first run, with the other QA views open. `verification/freeboard-performance-repeat.json` records the repeat after closing them.
 
-| Measurement | First run | Editor-only repeat |
-| --- | ---: | ---: |
-| Insert to second animation frame | 1,988.1 ms | 160.1 ms |
-| Idle frame median | 1,016.9 ms | 16.9 ms |
-| Six-object pan to frame median | 1,015.0 ms | 1,016.5 ms |
-| 600-object pan to frame median / p95 | 1,017.0 / 1,557.7 ms | 1,016.4 / 1,039.6 ms |
-| Native update enqueue median / p95 | 1.0 / 67.4 ms | 0.5 / 2.6 ms |
-| Pan long tasks / longest | 18 / 2,245 ms | 3 / 63 ms |
-| PNG export | 760.6 ms; 875,778 bytes | 589.2 ms; 875,778 bytes |
-| SVG export | 332.4 ms; 838,142 bytes | 226.7 ms; 838,142 bytes |
+| Measurement                          |               First run |      Editor-only repeat |
+| ------------------------------------ | ----------------------: | ----------------------: |
+| Insert to second animation frame     |              1,988.1 ms |                160.1 ms |
+| Idle frame median                    |              1,016.9 ms |                 16.9 ms |
+| Six-object pan to frame median       |              1,015.0 ms |              1,016.5 ms |
+| 600-object pan to frame median / p95 |    1,017.0 / 1,557.7 ms |    1,016.4 / 1,039.6 ms |
+| Native update enqueue median / p95   |           1.0 / 67.4 ms |            0.5 / 2.6 ms |
+| Pan long tasks / longest             |           18 / 2,245 ms |               3 / 63 ms |
+| PNG export                           | 760.6 ms; 875,778 bytes | 589.2 ms; 875,778 bytes |
+| SVG export                           | 332.4 ms; 838,142 bytes | 226.7 ms; 838,142 bytes |
 
 The repeat reduced interference by closing other test views. The similar six-object and 600-object pan frame waits suggest that remote presentation or scheduling contributes to the reported delay; this is an inference, not a measured hardware diagnosis. Native update enqueue was below 3 ms at p95 in the repeat. Three pan long tasks remained, and the idle frame timing differed substantially between runs. These are development/remote-browser measurements, not FPS or physical input-latency claims. Target-device profiling remains necessary before performance marketing claims. The UI uses actual neutral colors, not a grayscale filter on the drawing canvas, and export memory remains capped at 16 million pixels / 8192 pixels per side.
 
@@ -86,13 +100,13 @@ Open `/qa.html` in development and click Run 600-object benchmark. The determini
 
 The first recorded run (`verification/performance.json`) measured:
 
-| Measurement | Observed value |
-| --- | ---: |
-| Insert to second animation frame | 12.0 ms |
-| Pan update to next frame, median / p95 | 1016.3 / 1017.2 ms |
-| Six-step pointer gesture, including animation-frame waits | 16262.9 ms |
-| Entire-scene PNG export | 3059.7 ms; 880,259 bytes |
-| Entire-scene SVG export | 131.6 ms; 825,806 bytes |
+| Measurement                                               |           Observed value |
+| --------------------------------------------------------- | -----------------------: |
+| Insert to second animation frame                          |                  12.0 ms |
+| Pan update to next frame, median / p95                    |       1016.3 / 1017.2 ms |
+| Six-step pointer gesture, including animation-frame waits |               16262.9 ms |
+| Entire-scene PNG export                                   | 3059.7 ms; 880,259 bytes |
+| Entire-scene SVG export                                   |  131.6 ms; 825,806 bytes |
 
 The pan-update animation-frame waits were around one second in this remote environment. The gesture deliberately waits for two frames per step, so its wall time includes those waits. These values are **not** FPS, input latency or a claim of smooth 60 Hz interaction. A repeat includes an idle-frame baseline and native update-enqueue timings to distinguish scheduler waiting from API-call work. Physical-device interaction profiling remains an owner check.
 
