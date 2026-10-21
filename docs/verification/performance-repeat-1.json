@@ -1,0 +1,29 @@
+{
+  "kind": "performance",
+  "time": "2026-10-21T01:53:48.288Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1363,
+    "height": 936,
+    "devicePixelRatio": 1
+  },
+  "scene": {
+    "objects": 600,
+    "mix": "100 each rectangles, ellipses, mixed-language text, arrows, raster images and freehand/highlighter strokes",
+    "strokePoints": 2800
+  },
+  "metrics": {
+    "insertToSecondAnimationFrameMs": 11.2,
+    "idleAnimationFrameMedianMs": 16.6,
+    "panUpdateEnqueueMedianMs": 0.1,
+    "panUpdateEnqueueP95Ms": 0.2,
+    "panUpdateToNextFrameMedianMs": 1016.4,
+    "panUpdateToNextFrameP95Ms": 1017.2,
+    "sixStepPointerDragMs": 16262.5,
+    "pngExportMs": 3054.7,
+    "pngBytes": 880259,
+    "svgExportMs": 109.8,
+    "svgBytes": 825806
+  },
+  "notes": "Development build in a remote Chromium browser; frame waits are not FPS/input latency."
+}

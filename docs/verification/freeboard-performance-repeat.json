@@ -1,0 +1,32 @@
+{
+  "kind": "performance",
+  "time": "2026-10-21T05:54:06.914Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1363,
+    "height": 936,
+    "devicePixelRatio": 1
+  },
+  "scene": {
+    "objects": 600,
+    "mix": "100 rectangles, 100 ellipses, 100 mixed-language text, 100 arrows, 100 raster images, 100 freehand/highlighter strokes",
+    "strokePoints": 2800
+  },
+  "metrics": {
+    "insertToSecondAnimationFrameMs": 160.1,
+    "idleAnimationFrameMedianMs": 16.9,
+    "sixObjectPanToFrameMedianMs": 1016.5,
+    "panLongTaskCount": 3,
+    "panLongestTaskMs": 63,
+    "panUpdateEnqueueMedianMs": 0.5,
+    "panUpdateEnqueueP95Ms": 2.6,
+    "panUpdateToNextFrameMedianMs": 1016.4,
+    "panUpdateToNextFrameP95Ms": 1039.6,
+    "sixStepPointerDragMs": 10298.2,
+    "pngExportMs": 589.2,
+    "pngBytes": 875778,
+    "svgExportMs": 226.7,
+    "svgBytes": 838142
+  },
+  "notes": "Development build in a remote Chromium browser. Frame scheduling includes browser/host load; these are not FPS or input-latency claims."
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "browser-editor-checks",
+  "time": "2026-10-21T05:22:23.451Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "results": [
+    "PASS  Native coordinate conversion agrees after pan and zoom",
+    "PASS  Insert → undo → redo is one native history action",
+    "PASS  Move, resize, rotation, style, and deletion undo/redo",
+    "PASS  Group and ungroup with native keyboard commands",
+    "PASS  Attached connectors follow actual pointer dragging and resizing",
+    "PASS  Touch pointer drawing and hand navigation",
+    "PASS  Two touch pointers pinch around their center",
+    "PASS  Bengali/English text and images survive editable backup and PNG/SVG export",
+    "PASS  Real IndexedDB draft recovery, conflict handling, trash, and restore",
+    "PASS  Storage failure keeps edits dirty and never claims Saved",
+    "PASS  Editing continues with fetch disabled after assets are loaded"
+  ]
+}
