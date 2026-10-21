@@ -16,6 +16,14 @@ The repaired run's synchronous DOM dispatch median/p95 was 0.10/1.70 ms. Remote 
 
 The main content origin and IndexedDB namespace are retained while the canonical route becomes `/FreeBoard/`. A compatibility worker at the old route waits for explicit update activation, keeps old cached assets for active tabs, and redirects subsequent navigation. It does not delete documents. The public README uses actual application screenshots and links to the canonical app/source.
 
+## Public deployment acceptance
+
+The final runtime source tree (`58f9554`) passed [GitHub CI](https://github.com/Ataullha/FreeBoard/actions/runs/39580924529), including formatting, type checks, 48 tests, production build and production dependency audit. The portfolio commit `a2b263d` passed [build and Pages deployment](https://github.com/Ataullha/ataullha.github.io/actions/runs/39581514438). Published app: <https://ataullha.github.io/FreeBoard/>. Its loaded `assets/index-BENJQ12I.js` matches the local production build, including the pen overlay; worker cache version is `freeboard-db299f1546ce45c3`.
+
+The existing live `/FreePod/` session was refreshed, offered **Save & restart**, and followed the compatibility worker to `/FreeBoard/`. The saved board reopened and reported Available offline. An editable backup downloaded from the new route had all nine original objects and image-file mappings exactly equal to its pre-migration backup; mixed Bengali/English multiline text was retained. No document storage was cleared.
+
+The portfolio's FreeBoard icon was clicked and opened the canonical route. Classroom still targets its original Google Drive folder. The second app tab correctly reported viewing mode while the first held the editing lock. The public README logo, CI badge and all three actual application preview images loaded successfully. Both published repository trees were compared with their prepared local trees and matched exactly. Physical-device and offline-network limitations above still apply; these live checks do not substitute for a hardware stylus test.
+
 ## FreeBoard final monochrome release
 
 The application is renamed FreeBoard across its interface, page titles, install manifest, icons, exported filenames, source package, documentation and CI. The interface, starter illustrations, new template boards and default canvas are monochrome. Inter typography and Noto Sans Bengali remain bundled locally. Existing artwork and image colors are preserved.
