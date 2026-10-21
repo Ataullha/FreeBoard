@@ -90,6 +90,7 @@ function DemoCanvas({
 }) {
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [ready, setReady] = useState(false);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [tool, setTool] = useState<Tool>('selection');
   const [width, setWidth] = useState(2);
   const [markerWidth, setMarkerWidth] = useState(68);
@@ -135,6 +136,18 @@ function DemoCanvas({
       stopEraser();
     };
   }, [api]);
+  useEffect(() => {
+    if (!api || !ready || !viewport.width || !viewport.height) return;
+    // Centering alone leaves these full-size starters clipped inside the
+    // embedded canvas. Use the engine's committed viewport dimensions so a
+    // resize never fits against its previous width. Edits and navigation do
+    // not trigger this effect.
+    api.scrollToContent(undefined, {
+      fitToContent: true,
+      animate: false,
+      viewportZoomFactor: 0.8,
+    });
+  }, [api, ready, viewport]);
   useEffect(() => {
     if (resetOpen) resetDialog.current?.showModal();
     else resetDialog.current?.close();
@@ -239,11 +252,16 @@ function DemoCanvas({
               currentItemFillStyle: 'solid',
               currentItemStrokeWidth: width / 4.25,
             },
-            scrollToContent: true,
+            scrollToContent: false,
           }}
           onChange={(elements, state, files) => {
             if (!ready && !elements.length && initial.elements.length) return;
             setReady(true);
+            if (
+              viewport.width !== state.width ||
+              viewport.height !== state.height
+            )
+              setViewport({ width: state.width, height: state.height });
             scenes.set(template, {
               elements,
               appState: canvasState(state),
