@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible problem in FreeBoard.
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: 'Use synthetic examples. Do not attach private boards, personal information, credentials or browser storage dumps. Follow SECURITY.md for vulnerabilities.'
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Start from a new board when possible.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: 'Example: Chrome 154 on Android, touch input'
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include the app revision, a safe screenshot, or a minimal synthetic example if helpful.
