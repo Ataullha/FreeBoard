@@ -12,6 +12,16 @@ The object eraser deletes whole unlocked objects, including attached text. It do
 
 Space-drag temporarily pans; H selects Hand. Wheel/trackpad navigation, pointer-centered zoom and two-finger pinch use the editor's coordinate system. Fit, reset view, grid and presentation controls sit at the lower right. Exit presentation with Escape. On touchscreens, use one finger for the active tool and two for navigation; Hand pans with one finger.
 
+### Writing controls
+
+Choose **Pen** to see the **Pen width** slider and a live sample. Its 0.5–12 px range describes the base width at 100% zoom; stylus pressure can vary it. New pen strokes default to a finer 2 px base width. **Highlighter** has a separate 8–80 px slider; its existing 30% transparency and default width are preserved. Width choices are remembered in this browser and affect new strokes. Existing artwork retains its original style.
+
+The small clock beside the zoom controls shows this device's local time and updates each minute. It is hidden in presentation mode.
+
+With a mouse, the object eraser starts with a 9 px radius. Hold for longer than 0.4 seconds to grow its circular area, up to a 64 px radius. Drag across objects or keep holding over an area; release to erase the highlighted objects. It skips locked objects and removes bound labels/groups together. A full mouse gesture is one Undo action. Escape cancels the pending gesture. Touch and stylus erasing retain the editor's original behavior.
+
+Use the header's **Clear board** bin button to remove every object from the current board, including locked objects. **Keep board** cancels the confirmation. **Clear everything** performs one undoable action; Undo brings the objects and images back while the session is open. Other boards and saved backups are unaffected. After a reload, the in-memory undo history is no longer available.
+
 ### Useful shortcuts
 
 | Action                                    | Shortcut                        |

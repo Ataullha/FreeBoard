@@ -2,6 +2,16 @@
 
 Release candidate 1.0.0 • 21 October 2026. Results are measurements and observations from this build session, not a certification or a guarantee on untested devices.
 
+## Current workspace-controls update
+
+Added a device-local minute clock beside zoom on desktop and mobile, an explicit Clear board confirmation with one-action Undo/Redo, and independent persistent pen/marker width sliders. New pen strokes use a finer 2 px base width, with a 0.5–12 px slider; the marker keeps its previous default and transparency. The mouse object eraser starts at 9 px radius and grows after a 400 ms hold to a maximum 64 px radius. It previews pending targets, commits once on release, skips locks and cancels with Escape. Touch and stylus erasing remain native.
+
+**Checks:** 67 automated tests across 11 suites pass, covering deletion closure, bound notes/groups, locks, surviving connectors, rotated/hollow geometry, negative path coordinates, growth/reset/cancel/read-only behavior, screen-space size at another zoom, and exact-scope old-worker retirement. The full product harness passes 14 journeys, including actual stroke-width changes, hold-growth erasure with one-step history, Clear board cancellation and recovery of locked objects/images, and controls/clock layout at 320, 390, 768 and 1100 pixels. See `verification/controls-app-journeys.json`.
+
+The repeatable pen harness retained its palm-interrupted stroke and 42 pressure samples in the final test stroke. All 28 strokes survived reload; the 24-stroke writing sequence made zero IndexedDB store puts. On a 628-object scene, the growing mouse eraser reached 58 px radius, removed nine objects, and one Undo restored the complete scene. Synchronous down/up dispatch measured 2.7/5.2 ms; no long tasks were observed during that held interaction. See `verification/controls-pen-and-eraser.json`. These are remote Chromium development measurements, not physical-device latency claims; the remote frame scheduler still ran at about 1,016 ms per frame in this run.
+
+The current deployment publishes only `/FreeBoard/`. The old `/FreePod/` page/worker source and published directory are removed; the artifact assembly checks that the old directory is absent. On the canonical deployment, the app unregisters only the exact obsolete worker scope, preserving all board data, current/unrelated workers and asset caches. Physical-device and offline-network limits below remain unchanged. Earlier deployment/migration measurements are retained as historical evidence.
+
 ## Stylus handwriting repair — 21 October 2026
 
 A user report identified poor stylus handwriting despite earlier mouse-oriented checks. Those checks did not establish physical stylus quality. Investigation found that a palm touch in Excalidraw 0.18.1 could cancel and remove a short active freehand stroke. The host also requested a full recovery checkpoint after every pointer-up.
@@ -14,9 +24,13 @@ The repair adds a pen-only input adapter: coalesced samples and pressure are buf
 
 The repaired run's synchronous DOM dispatch median/p95 was 0.10/1.70 ms. Remote animation frame median/p95 was approximately 156/1,016 ms even with `visibilityState` reporting visible, so these measurements **do not establish physical input-to-pixel latency, frame rate or perceived smoothness**. Earlier mouse checks and synthetic input are not a physical stylus certification. Chrome/Edge hardware, Android tablets, iPad/Safari, palm-before-hover behavior and pressure feel still require owner testing on real devices. No benchmark claim is invented for those environments.
 
-The main content origin and IndexedDB namespace are retained while the canonical route becomes `/FreeBoard/`. A compatibility worker at the old route waits for explicit update activation, keeps old cached assets for active tabs, and redirects subsequent navigation. It does not delete documents. The public README uses actual application screenshots and links to the canonical app/source.
+The main content origin and IndexedDB namespace are retained while the canonical route becomes `/FreeBoard/`. An earlier compatibility worker supported the route migration without deleting documents. That compatibility route has since been retired at the owner’s request. The public README uses actual application screenshots and links to the canonical app/source.
 
-## Public deployment acceptance
+## Old deployment removed
+
+At the owner's request, the portfolio workflow now publishes the app only under `/FreeBoard/`. It no longer copies the previous compatibility page or worker, explicitly removes any old `FreePod` build-output directory, and checks that the directory is absent from the deployment artifact. The old redirect source files are removed. Current README and deployment instructions reflect the single app address. Application source and document storage are unchanged. The migration checks below describe the earlier transition, before the old address was retired.
+
+## Earlier public deployment acceptance
 
 The final runtime source tree (`58f9554`) passed [GitHub CI](https://github.com/Ataullha/FreeBoard/actions/runs/39580924529), including formatting, type checks, 48 tests, production build and production dependency audit. The portfolio commit `a2b263d` passed [build and Pages deployment](https://github.com/Ataullha/ataullha.github.io/actions/runs/39581514438). Published app: <https://ataullha.github.io/FreeBoard/>. Its loaded `assets/index-BENJQ12I.js` matches the local production build, including the pen overlay; worker cache version is `freeboard-db299f1546ce45c3`.
 

@@ -32,6 +32,12 @@ Web Locks obtains an exclusive editing lease per board when available. Broadcast
 
 Trash is a soft delete with a revision increment. No permanent-delete or asset garbage collection is exposed in this release. This favors recovery; long-running image-heavy workspaces should download backups and manage browser storage intentionally.
 
+## Writing and workspace controls
+
+`src/ui/LocalClock.tsx` owns its minute-aligned timer, so clock updates do not run in the pointer-input loop. Pen and marker widths are separate small preferences; the pixel slider maps to the engine’s freehand size factor, preserving the native editable/exported representation. Existing objects retain their styles.
+
+`src/editor/growingEraser.ts` implements mouse-only hold growth and previews pending objects without mutating their document data. Screen-space radius is converted at the current zoom; swept circle tests cover fast movement, rotated shapes, negative path coordinates, and hollow/filled geometry. Release commits tombstones and detached connector bindings as one immediate native history action. Escape cancels. `boardEditing.ts` expands bound labels and group members while protecting locked objects; Clear board explicitly includes locked objects and uses the same tombstone/undo approach. Touch and stylus erasing remain native. Ellipse outlines use a polygon approximation; pressure-path hit margins are conservative.
+
 ## Safe input and exports
 
 Only supported drawing element types and bounded numeric/style enums are accepted. JSON is parsed as data, never evaluated or inserted as HTML. Links, embeddables and arbitrary executable/custom data are stripped or rejected. Image data must be supported raster MIME with matching signatures and bounded decoded dimensions; URLs and SVG payloads are rejected. Clipboard and drop share these rules. The production CSP limits connections to the same origin and disallows frames/objects.
