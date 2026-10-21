@@ -1,95 +1,104 @@
+<div align="center">
+
+<img src="public/icons/freeboard.svg" width="64" height="64" alt="FreeBoard logo" />
+
 # FreeBoard
 
-Make space for ideas. FreeBoard is a private, browser-based whiteboard for lessons, ideas and simple team workflows. Open it and draw immediately. No registration, API key, payment or backend is required.
+**Make space for ideas.**
 
-FreeBoard pairs locally bundled Inter typography with a black-and-white interface, compact drawing controls and responsive workspace dialogs. Noto Sans Bengali supports mixed Bengali and English text. See the [design system](docs/DESIGN.md) for typography, colors and interface decisions.
+A private, open-source whiteboard for lessons, sketches, and clearer thinking.
+Open your browser and start. No account, payment, API key, or backend required.
 
-FreeBoard is open source under the [MIT license](LICENSE). Everyone is welcome to fork the project, report bugs, improve documentation and propose changes through pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing. This is a release candidate; tested environments and remaining checks are documented in the [verification report](docs/VERIFICATION.md).
+[**Open FreeBoard ↗**](https://ataullha.github.io/FreeBoard/) · [User guide](docs/USER_GUIDE.md) · [Contribute](CONTRIBUTING.md) · [Report a bug](https://github.com/Ataullha/FreeBoard/issues)
 
-## Run it
+[![FreeBoard checks](https://github.com/Ataullha/FreeBoard/actions/workflows/ci.yml/badge.svg)](https://github.com/Ataullha/FreeBoard/actions/workflows/ci.yml)
+[MIT licensed](LICENSE)
 
-Use Node.js 22.12+ (Node 24 LTS recommended) and npm. From the project directory:
+</div>
+
+![FreeBoard showing an editable lesson with Bengali and English text](docs/previews/lesson.jpg)
+
+## A clear workspace
+
+- **Write and draw.** Pressure-sensitive stylus ink, pen, highlighter, shapes, attached arrows, multiline text, sticky notes, and local images.
+- **Keep editing.** Multiple selection, resize, rotate, group, lock, layering, copy/paste, and undo/redo.
+- **Make it yours.** A restrained black-and-white interface, bundled Inter typography, Bengali text support, useful shortcuts, and responsive controls.
+- **Keep your work nearby.** IndexedDB autosave, recoverable trash, interrupted-session recovery, board thumbnails, and protection against stale writes from another tab.
+- **Take your ideas with you.** Editable JSON backups, PNG and SVG exports, selection export, and transparent backgrounds.
+- **Use it offline.** Installable PWA with locally bundled runtime assets. Updates wait for you to save and restart.
+
+The lesson, brainstorming, and flowchart starters are ordinary editable objects. There is no cloud account, cloud synchronization, or live collaboration service.
+
+### Real application previews
+
+| Brainstorming                                                                | Connected flowchart                                                       |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Editable brainstorming starter in FreeBoard](docs/previews/brainstorm.jpg) | ![Editable connected flowchart in FreeBoard](docs/previews/flowchart.jpg) |
+
+These are screenshots of the running application, not mockups.
+
+## Run locally
+
+Use **Node.js 24 LTS** and npm; Node.js 22.12+ is supported.
 
 ```sh
+git clone https://github.com/Ataullha/FreeBoard.git
+cd FreeBoard
 npm ci
 npm run dev
 ```
 
-Open the URL Vite prints, normally `http://localhost:4173`. Production output is already included in the delivered source ZIP under `dist/`.
+Open the local URL Vite prints, usually `http://localhost:4173`.
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Local development, including local font preparation |
-| `npm run typecheck` | Strict TypeScript checks |
-| `npm test` | Repeatable model, storage, import, autosave and worker tests |
-| `npm run test:watch` | Watch automated tests |
-| `npm run format:check` | Check maintained source formatting |
-| `npm run build` | Type check, bundle and generate the offline worker in `dist/` |
-| `npm run preview` | Serve the production build on port 4173 |
-| `npm run check` | Type check, tests and production build |
-| `npm run package` | Create source and direct-upload ZIPs in `artifacts/` after building |
+| Command                | What it does                                                         |
+| ---------------------- | -------------------------------------------------------------------- |
+| `npm run dev`          | Start development with local runtime assets                          |
+| `npm run format:check` | Check source formatting                                              |
+| `npm test`             | Run model, pen-input, history, storage, validation, and worker tests |
+| `npm run check`        | Type-check, test, and build                                          |
+| `npm run build`        | Generate the static production app in `dist/`                        |
+| `npm run preview`      | Serve the production build on port 4173                              |
+| `npm run package`      | Package source and deployment ZIPs after building                    |
 
-Do not open `dist/index.html` as a `file://` URL. Serve the directory. PWA installation, service workers and Web Locks need HTTPS or a trustworthy localhost origin. The development server deliberately does not register a service worker.
+Serve `dist/` over HTTP/HTTPS rather than opening its HTML file directly. Offline installation requires HTTPS or a trustworthy localhost origin; development intentionally does not register a worker.
 
-## Make something
+## Your work, your browser
 
-Pick Pen, Highlighter, a shape, line, arrow, text or sticky note. Properties appear when useful. Double-click a note or shape to edit its text. Bengali and English work together, including multiple lines. Insert local PNG, JPEG or WebP images with the image button, paste, or drag and drop.
+Board contents and images stay in this browser profile. FreeBoard has no analytics, tracking scripts, accounts, or board-upload service. Hosting providers still receive ordinary website requests; see [privacy information](docs/PRIVACY.md).
 
-Select with V. Drag an object to move it; drag corner handles to resize and the upper round handle to rotate. Images preserve proportions by default; Shift allows free resizing. Shift-click or drag a selection rectangle for multiple objects. Use the right-click menu for group, lock, duplicate and layer order. Attach arrow endpoints near shape edges to keep connections when objects move or resize.
+**Browser storage can be cleared. Download editable backups of important work.** Use **Export → Editable backup** to preserve objects, text, and images together. A different browser, device, or website origin has separate storage. “Saved on this device” appears only after the storage transaction succeeds. Recovery cannot guarantee the last unsaved input before a crash.
 
-The object eraser deletes whole unlocked objects, including attached text. It does not erase individual stroke pixels. Highlighter strokes use 30% opacity; independent overlapping strokes accumulate color. Stylus pressure is used when supplied by the device.
+The FreeBoard rename preserves the original database and preference keys. Legacy BoardPilot v1/v2 backups remain importable. The previous `/FreePod/` address is retained as a compatibility redirect to `/FreeBoard/` on the same origin.
 
-Space-drag temporarily pans; H selects Hand. Wheel/trackpad navigation, pointer-centered zoom and two-finger pinch use the editor's coordinate system. Fit, reset view, grid and presentation controls sit at the lower right. Exit presentation with Escape. On touchscreens, use one finger for the active tool and two for navigation; Hand pans with one finger.
+## Build and deploy
 
-### Useful shortcuts
+FreeBoard builds to static files. No secrets or environment variables are needed.
 
-| Action | Shortcut |
-| --- | --- |
-| Select / pen / highlighter / hand | V / P / M / H |
-| Rectangle / ellipse / arrow / line / text | R / O / A / L / T |
-| Sticky / image / object eraser | N / I / E |
-| Undo / redo | Ctrl or Cmd + Z / Shift + Z |
-| Copy / cut / paste / select all | Ctrl or Cmd + C / X / V / A |
-| Duplicate / group / ungroup | Ctrl or Cmd + D / G / Shift + G |
-| Lock or unlock | Ctrl or Cmd + Shift + L |
-| Bring forward / send backward | Ctrl or Cmd + ] / [ |
-| Fit content | Shift + 1 |
-| Save now / import backup | Ctrl or Cmd + S / O |
+The live deployment is [ataullha.github.io/FreeBoard/](https://ataullha.github.io/FreeBoard/), linked from the owner's portfolio. Its deployment workflow lives in [Ataullha/ataullha.github.io](https://github.com/Ataullha/ataullha.github.io/blob/main/.github/workflows/pages.yml) and builds this repository. A source-only update needs that workflow to be run again. This repository's CI checks changes and retains `dist` as a build artifact.
 
-Tool shortcuts are ignored inside text editors, inputs and dialogs, and during IME composition. Use your operating system's Bengali input method. The in-app help contains the same shortcuts.
+See [deployment instructions](docs/DEPLOYMENT.md) for GitHub Pages, Cloudflare Pages Git integration, direct upload, subdirectory hosting, and safe PWA updates.
 
-## Keep your work
+## Engineering and verification
 
-The title field renames the open board. Boards opens your workspace: create, search, duplicate or reopen boards, choose one of three editable templates, restore Trash, or rescue an interrupted draft from Recovery. Trash is recoverable and has no automatic purge in this release.
+React, TypeScript, and Vite provide the application shell. The MIT-licensed Excalidraw engine owns object editing, history, connectors, and exports. A separate pen-input adapter buffers coalesced pressure samples and renders active ink without a React update or scene traversal for every sample. Each completed stroke becomes a native editable object and one history action. Storage waits for pen idle rather than writing on every pen lift.
 
-Autosave uses IndexedDB for objects and images. “Saved on this device” appears only after a successful transaction. On storage failure, the board remains editable with a readable error, Retry and an immediate backup action. Do not close a failed or conflicted board before downloading a backup or making a copy.
+**This is a release candidate.** Automated and browser checks are documented with actual measurements in the [verification report](docs/VERIFICATION.md). Remote Chromium tests cover pen/palm event routing, sample retention, undo/redo, export, reload, and recovery. Physical stylus latency and pressure feel still need target-device testing; Safari, Firefox, and mobile hardware are not certified.
 
-**Browser storage can be cleared.** Private browsing, profile cleanup, disk pressure, a new device or a different website origin can make boards unavailable. Export important work regularly. Protect storage asks the browser for persistent storage; the browser may decline. The same browser profile can access all its local boards; this is not account isolation or encryption.
+| Documentation                        | Purpose                                                 |
+| ------------------------------------ | ------------------------------------------------------- |
+| [User guide](docs/USER_GUIDE.md)     | Tools, shortcuts, backups, and offline use              |
+| [Architecture](docs/ARCHITECTURE.md) | Editor adapter, documents, storage, and data safety     |
+| [Design](docs/DESIGN.md)             | Typography, colors, and interface decisions             |
+| [Verification](docs/VERIFICATION.md) | Repeatable checks, performance records, and limitations |
+| [Dependencies](docs/DEPENDENCIES.md) | Dependency choices and license review                   |
+| [Launch copy](docs/LAUNCH.md)        | Product description and announcement text               |
 
-One tab holds the editing lock per board where supported. A second tab can view or copy it. Transactional revision checks reject stale writes even without Web Locks. Conflicting unsaved edits can be copied; stale recovery drafts can be rescued separately.
+## Contribute
 
-## Import, export and offline use
+Everyone is welcome to use, fork, inspect, and improve FreeBoard. Bug reports, reproducible device/input issues, accessibility improvements, translations, documentation, and pull requests all help.
 
-Export opens editable JSON, PNG or SVG options for the whole board or selected objects. Choose a solid or transparent image background. Click Prepare file, then Download. JSON preserves editable objects, styles, image bytes and version information. PNG is capped at 16 million pixels / 8192 pixels per side to protect device memory; SVG embeds fonts and images. Long or complex exports can take a few seconds.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, follow the [Code of Conduct](CODE_OF_CONDUCT.md), and use [SECURITY.md](SECURITY.md) for security reports. When reporting a pen issue, include your device, stylus model, operating system, browser version, and whether palm contact changes the behavior. Please avoid attaching private board content.
 
-Import a `.freeboard.json` backup from Boards, Ctrl/Cmd+O, or drag and drop. It creates a new board. Invalid files leave the current board intact. Imports accept FreeBoard and legacy BoardPilot document versions 1 and 2; future versions are rejected. Untrusted HTML, scripts, SVG images, embedded websites and remote image URLs are not supported.
+## License and acknowledgments
 
-Limits: 40 MiB backup input, 30 MiB decoded assets per backup, 10,000 objects and 250,000 stroke points. Local images: PNG/JPEG/WebP only, up to 10 MiB, 20 megapixels and 8192 pixels on either side. Header validation occurs before decoding.
-
-On HTTPS, the production app caches its bundled assets and reports Available offline only when controlled by its worker. After that, reopening and editing need no network connection. Updates wait for Save & restart. Board storage is independent of application caches. No login, cloud sync or collaboration is included; share downloaded artwork or editable backups manually.
-
-The FreeBoard rename preserves the original browser database and preference keys. Existing saved boards and `.boardpilot.json` backups remain available on the same website origin. New backups use `.freeboard.json`.
-
-## Owner handoff
-
-- [Deployment, direct upload and current hosting limits](docs/DEPLOYMENT.md)
-- [Architecture and data-safety design](docs/ARCHITECTURE.md)
-- [Interface and typography](docs/DESIGN.md)
-- [Verification results, benchmark and untested environments](docs/VERIFICATION.md)
-- [Privacy information](docs/PRIVACY.md)
-- [Dependencies, licenses and attribution](docs/DEPENDENCIES.md)
-- [Product description and launch copy](docs/LAUNCH.md)
-
-The source ZIP includes source, tests, lockfile, notices, CI and a ready-to-upload production build. No private credentials are required. GitHub CI validates changes and uploads `dist`; it does not publish to a hosting account. Connect your own repository and hosting account when ready.
-
-MIT for FreeBoard code. Bundled dependencies and fonts retain their respective licenses. See `LICENSE`, `THIRD_PARTY_NOTICES.txt` and `docs/licenses/`.
+FreeBoard is released under the [MIT license](LICENSE). Excalidraw and other bundled dependencies retain their own licenses and attribution. Inter and Noto Sans Bengali are bundled under the SIL Open Font License. See [third-party notices](THIRD_PARTY_NOTICES.txt), [dependency notes](docs/DEPENDENCIES.md), and [license texts](docs/licenses/).
