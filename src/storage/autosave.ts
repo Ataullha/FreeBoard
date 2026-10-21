@@ -10,6 +10,10 @@ export class Autosave {
   private draftTimer?: ReturnType<typeof setTimeout>;
   private queue: Promise<void> = Promise.resolve();
   private disposed = false;
+  private interacting = false;
+  private checkpointGeneration = 0;
+  private checkpointPending?: Promise<void>;
+  private lastStatus?: SaveStatus;
   constructor(
     private repo: BoardRepository,
     public board: BoardRecord,
@@ -24,9 +28,28 @@ export class Autosave {
     if (this.disposed) return;
     this.latest = scene;
     this.generation++;
-    this.status('pending');
+    this.notify('pending');
+    this.schedule();
+  }
+  beginInteraction() {
+    this.interacting = true;
     clearTimeout(this.timer);
     clearTimeout(this.draftTimer);
+  }
+  endInteraction() {
+    this.interacting = false;
+    if (this.dirty) this.schedule();
+  }
+  private notify(status: SaveStatus, error?: unknown) {
+    if (status !== this.lastStatus || error) {
+      this.lastStatus = status;
+      this.status(status, error);
+    }
+  }
+  private schedule() {
+    clearTimeout(this.timer);
+    clearTimeout(this.draftTimer);
+    if (this.interacting || this.disposed) return;
     this.draftTimer = setTimeout(() => {
       void this.checkpoint();
     }, 180);
@@ -47,14 +70,28 @@ export class Autosave {
     return task;
   }
   checkpoint() {
-    return this.enqueue(async () => {
-      if (!this.latest || !this.dirty || this.board.revision === 0) return;
+    if (this.checkpointPending) return this.checkpointPending;
+    const pending = this.enqueue(async () => {
+      if (
+        !this.latest ||
+        !this.dirty ||
+        this.board.revision === 0 ||
+        this.checkpointGeneration === this.generation
+      )
+        return;
+      const generation = this.generation;
       try {
         await this.repo.checkpoint(this.board, this.latest, this.writerId);
+        this.checkpointGeneration = generation;
       } catch (e) {
-        this.status('error', e);
+        this.notify('error', e);
       }
     });
+    this.checkpointPending = pending;
+    void pending.finally(() => {
+      this.checkpointPending = undefined;
+    });
+    return pending;
   }
   flush(thumbnail?: string): Promise<boolean> {
     clearTimeout(this.timer);
@@ -65,7 +102,7 @@ export class Autosave {
       const generation = this.generation,
         scene = structuredClone(this.latest),
         written = this.board;
-      this.status('saving');
+      this.notify('saving');
       try {
         const next =
           written.revision === 0
@@ -82,10 +119,10 @@ export class Autosave {
         this.board = { ...next, title: this.board.title };
         this.savedGeneration = generation;
         this.committed?.(this.board);
-        this.status(this.dirty ? 'pending' : 'saved');
+        this.notify(this.dirty ? 'pending' : 'saved');
       } catch (e) {
         success = false;
-        this.status('error', e);
+        this.notify('error', e);
       }
     }).then(() => success);
   }
