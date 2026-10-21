@@ -1,0 +1,289 @@
+.interactive-demo {
+  position: relative;
+  background: white;
+}
+.demo-controls {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-bottom: 1px solid #eee;
+  padding: 7px;
+}
+.demo-controls button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: white;
+  display: grid;
+  place-items: center;
+}
+.demo-controls button:hover {
+  background: #f2f2f0;
+}
+.demo-controls button[aria-pressed='true'] {
+  color: white;
+  background: #171717;
+}
+.demo-divider {
+  height: 21px;
+  width: 1px;
+  background: #e6e6e3;
+  margin: 0 5px;
+}
+.demo-canvas {
+  position: relative;
+  height: 435px;
+  isolation: isolate;
+  touch-action: none;
+  overscroll-behavior: contain;
+  overflow: hidden;
+  outline: 0;
+}
+.demo-canvas .excalidraw {
+  --color-primary: #171717 !important;
+  --color-primary-darker: #333 !important;
+  --color-primary-darkest: #171717 !important;
+  --color-primary-light: #ededed !important;
+  --color-selection: #171717 !important;
+  --color-surface-primary-container: #eee !important;
+  --color-brand-active: #171717 !important;
+  --color-on-primary-container: #333 !important;
+  --color-brand-hover: #eee !important;
+  --default-border-color: #e5e5e5 !important;
+  --ui-font: Inter, 'Noto Sans Bengali', sans-serif !important;
+  --shadow-island: 0 1px 5px #0000000b !important;
+  font-family: Inter, 'Noto Sans Bengali', sans-serif !important;
+}
+.demo-canvas .excalidraw .App-toolbar-container,
+.demo-canvas .excalidraw .main-menu-trigger,
+.demo-canvas .excalidraw .layer-ui__wrapper__top-right,
+.demo-canvas .excalidraw .help-icon,
+.demo-canvas .excalidraw .library-button,
+.demo-canvas .excalidraw .App-toolbar__extra-tools-trigger,
+.demo-canvas .excalidraw .HintViewer {
+  display: none !important;
+}
+.demo-canvas .excalidraw .App-menu__left {
+  top: 12px !important;
+  max-height: calc(100% - 70px);
+  overflow: auto;
+}
+.demo-canvas .excalidraw .Island {
+  border: 1px solid #e7e7e3;
+}
+.demo-canvas .excalidraw .layer-ui__wrapper__footer-center {
+  pointer-events: none;
+}
+.demo-canvas .excalidraw .zoom-actions,
+.demo-canvas .excalidraw .undo-redo-buttons {
+  zoom: 0.85;
+}
+.demo-canvas .excalidraw button[aria-label='Add link'],
+.demo-canvas .excalidraw button[aria-label='Edit link'] {
+  display: none;
+}
+.demo-canvas.is-inking .excalidraw fieldset:has(input[name='stroke-width']) {
+  display: none;
+}
+.demo-width {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 40px;
+  border-bottom: 1px solid #eee;
+  font-size: 10px;
+}
+.demo-width input {
+  width: 120px;
+  accent-color: #171717;
+  min-height: 24px;
+}
+.demo-width output {
+  min-width: 35px;
+  font-variant-numeric: tabular-nums;
+}
+.demo-ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.demo-eraser {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border: 1.5px solid #171717;
+  border-radius: 50%;
+  background: #1717170d;
+  z-index: 3;
+  transition:
+    width 64ms linear,
+    height 64ms linear;
+}
+.demo-eraser[hidden] {
+  display: none;
+}
+.demo-eraser span {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 7px;
+  border-radius: 5px;
+  font-size: 9px;
+  background: #171717;
+  color: white;
+  white-space: nowrap;
+}
+.demo-eraser[data-count='0'] span {
+  display: none;
+}
+.demo-canvas canvas[data-mouse-eraser='true'] {
+  cursor: none !important;
+}
+.demo-canvas .local-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: #777;
+  background: #fff;
+  border: 1px solid #e7e7e3;
+  border-radius: 6px;
+  min-height: 31px;
+  padding: 0 8px;
+  margin-left: 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.demo-canvas .local-clock > svg {
+  width: 12px;
+}
+.demo-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 45px;
+  padding: 9px 13px;
+  border-top: 1px solid #eee;
+  font-size: 9px;
+  color: #73736d;
+}
+.demo-bottom button,
+.demo-bottom a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  border: 0;
+  background: none;
+  color: #333;
+  padding: 6px;
+}
+.demo-bottom > span {
+  margin-right: auto;
+}
+.demo-notice {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 50px;
+  padding: 12px 15px;
+  border: 1px solid #d2d2ca;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 10px;
+  z-index: 5;
+  box-shadow: 0 2px 10px #0001;
+  line-height: 1.6;
+}
+.reset-demo-dialog {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 26px;
+  max-width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 10px 60px #0002;
+  color: #171717;
+}
+.reset-demo-dialog::backdrop {
+  background: #0005;
+}
+.reset-demo-dialog h2 {
+  font-size: 20px;
+  letter-spacing: -0.5px;
+  margin: 0 0 15px;
+}
+.reset-demo-dialog p {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.reset-demo-dialog > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.reset-demo-dialog .button {
+  font-size: 12px;
+  min-height: 40px;
+}
+@media (max-width: 540px) {
+  .demo-controls {
+    gap: 0;
+    justify-content: space-around;
+    padding: 6px 4px;
+  }
+  .demo-controls button {
+    width: 30px;
+    height: 34px;
+  }
+  .demo-controls button svg {
+    width: 16px;
+  }
+  .demo-divider {
+    margin-inline: 1px;
+  }
+  .demo-canvas {
+    height: 410px;
+  }
+  .demo-canvas .excalidraw .App-menu__left {
+    max-width: 180px;
+  }
+  .demo-bottom {
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 8px;
+    padding: 8px;
+  }
+  .demo-bottom > span {
+    width: 100%;
+  }
+  .demo-bottom button,
+  .demo-bottom a {
+    font-size: 9px;
+  }
+  .demo-bottom > a {
+    margin-left: auto;
+  }
+  .demo-canvas .excalidraw .footer-center {
+    display: none;
+  }
+  .demo-canvas .excalidraw .App-bottom-bar {
+    bottom: 4px !important;
+  }
+  .demo-canvas .excalidraw .zoom-actions,
+  .demo-canvas .excalidraw .undo-redo-buttons {
+    zoom: 0.75;
+  }
+  .reset-demo-dialog .button {
+    padding-inline: 12px;
+  }
+}
