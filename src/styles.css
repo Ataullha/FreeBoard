@@ -1610,3 +1610,183 @@ input[type='checkbox'] {
   pointer-events: none;
   z-index: 2;
 }
+
+/* Writing controls remain outside the per-sample ink renderer. */
+.ink-properties,
+.eraser-hint {
+  position: absolute;
+  left: 50%;
+  top: 88px;
+  transform: translateX(-50%);
+  z-index: 4;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-shadow: 0 2px 6px #26262608;
+}
+.ink-properties {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  min-height: 42px;
+}
+.ink-properties label {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ink-properties input {
+  width: 112px;
+  min-height: 28px;
+  accent-color: #171717;
+  cursor: ew-resize;
+}
+.ink-properties output {
+  min-width: 42px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ink-properties output small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.width-preview {
+  width: 25px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.width-preview i {
+  display: block;
+  width: 24px;
+  min-height: 0.5px;
+  background: #171717;
+  border-radius: 100px;
+}
+.canvas-area.is-inking .excalidraw fieldset:has(input[name='stroke-width']) {
+  display: none;
+}
+.eraser-hint {
+  padding: 10px 13px;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--muted);
+}
+.eraser-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1.5px solid #252525;
+  border-radius: 50%;
+  background: #fff3;
+  pointer-events: none;
+  z-index: 6;
+  box-shadow: 0 0 0 1px #fff9;
+  transition:
+    width 64ms linear,
+    height 64ms linear;
+}
+.eraser-cursor[hidden] {
+  display: none;
+}
+.eraser-cursor span {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #171717;
+  color: white;
+  border-radius: 5px;
+  padding: 4px 7px;
+  font:
+    10px 'Inter',
+    sans-serif;
+  white-space: nowrap;
+}
+.eraser-cursor[data-count='0'] span {
+  display: none;
+}
+.canvas-area canvas[data-mouse-eraser='true'] {
+  cursor: none !important;
+}
+.local-clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #676767;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.desktop-clock {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 8px;
+}
+.clear-description {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #676767;
+  margin: 4px 0 24px;
+}
+.clear-description strong {
+  color: var(--ink);
+}
+.clear-board:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .ink-properties {
+    top: 115px;
+    padding: 5px 9px;
+    gap: 8px;
+  }
+  .ink-properties input {
+    width: 100px;
+  }
+  .width-preview {
+    display: none;
+  }
+  .eraser-hint {
+    top: 115px;
+    font-size: 9px;
+    padding: 8px 10px;
+  }
+  .excalidraw .footer-center {
+    display: none;
+  }
+  .mobile-zoom .local-clock {
+    margin-left: 4px;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    padding: 0 8px;
+    gap: 5px;
+    min-height: 28px;
+    font-size: 10px;
+  }
+  .mobile-zoom .local-clock svg {
+    width: 12px;
+    height: 12px;
+  }
+  .canvas-utilities {
+    bottom: 58px;
+  }
+}
+@media (max-height: 530px) and (min-width: 601px) {
+  .ink-properties,
+  .eraser-hint {
+    top: 80px;
+  }
+}

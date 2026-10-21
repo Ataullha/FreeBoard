@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Excalidraw,
   MainMenu,
+  Footer,
   CaptureUpdateAction,
   convertToExcalidrawElements,
   getSceneVersion,
@@ -43,6 +44,7 @@ import {
   AlertCircle,
   Eraser,
   HelpCircle,
+  Trash2,
 } from 'lucide-react';
 import { BoardRepository, ConflictError } from './storage/repository';
 import type { Draft } from './storage/repository';
@@ -68,6 +70,10 @@ import {
   thumbnail,
 } from './io/export';
 import { attachPenInput } from './editor/penInput';
+import { attachGrowingEraser } from './editor/growingEraser';
+import { deleteObjects } from './editor/boardEditing';
+import { LocalClock } from './ui/LocalClock';
+import { Dialog } from './ui/Dialog';
 import { stickyElements, templateElements } from './editor/templates';
 import type { TemplateId } from './editor/templates';
 import { BoardLibrary } from './ui/BoardLibrary';
@@ -77,7 +83,7 @@ import { TemplatePreview } from './ui/TemplatePreview';
 import { setupPwa } from './pwa';
 import type { OfflineState } from './pwa';
 
-type Modal = 'library' | 'export' | 'help' | 'privacy' | null;
+type Modal = 'library' | 'export' | 'help' | 'privacy' | 'clear' | null;
 type Tool =
   | 'selection'
   | 'freedraw'
@@ -116,6 +122,14 @@ function pref(key: string, value?: string) {
     return null;
   }
 }
+const INK_SCALE = 4.25;
+function savedWidth(key: string, fallback: number) {
+  const raw = pref(key),
+    value = raw === null ? fallback : Number(raw);
+  return Number.isFinite(value) && value >= 0.1 && value <= 20
+    ? value
+    : fallback;
+}
 export default function App() {
   const [repo] = useState(() => new BoardRepository()),
     [lease] = useState(() => new BoardLease());
@@ -134,6 +148,13 @@ export default function App() {
     [notice, setNotice] = useState(''),
     [readOnly, setReadOnly] = useState(false),
     [presentation, setPresentation] = useState(false);
+  const brushWidths = useRef<{ pen: number; highlighter: number } | null>(null);
+  if (!brushWidths.current)
+    brushWidths.current = {
+      pen: savedWidth('pen-width', 2 / INK_SCALE),
+      highlighter: savedWidth('marker-width', 16),
+    };
+  const [strokeWidth, setStrokeWidth] = useState(brushWidths.current.pen);
   const [tool, setTool] = useState<Tool>('selection'),
     [empty, setEmpty] = useState(true),
     [selected, setSelected] = useState(false),
@@ -151,7 +172,8 @@ export default function App() {
     marker = useRef(false),
     signature = useRef('');
   const canvasHost = useRef<HTMLElement>(null),
-    inkCanvas = useRef<HTMLCanvasElement>(null);
+    inkCanvas = useRef<HTMLCanvasElement>(null),
+    eraserCursor = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null),
     imageInput = useRef<HTMLInputElement>(null),
     switching = useRef(false),
@@ -175,7 +197,7 @@ export default function App() {
   );
   useEffect(() => {
     if (!initial || !canvasHost.current || !inkCanvas.current) return;
-    return attachPenInput(canvasHost.current, inkCanvas.current, {
+    const stopPen = attachPenInput(canvasHost.current, inkCanvas.current, {
       editor: () => api.current,
       highlighter: () => marker.current,
       start: (element) => {
@@ -200,6 +222,17 @@ export default function App() {
         autosave.current?.endInteraction();
       },
     });
+    const stopEraser = eraserCursor.current
+      ? attachGrowingEraser(canvasHost.current, eraserCursor.current, {
+          editor: () => api.current,
+          start: () => autosave.current?.beginInteraction(),
+          finish: () => autosave.current?.endInteraction(),
+        })
+      : () => {};
+    return () => {
+      stopPen();
+      stopEraser();
+    };
   }, [initial, scene]);
   const refreshLibrary = useCallback(async () => {
     setLibraryLoading(true);
@@ -536,7 +569,7 @@ export default function App() {
       api.current.updateScene({
         appState: {
           currentItemOpacity: 30,
-          currentItemStrokeWidth: 16,
+          currentItemStrokeWidth: brushWidths.current!.highlighter,
           currentItemStrokeColor: '#777777',
           currentItemRoughness: 0,
         },
@@ -546,7 +579,7 @@ export default function App() {
       api.current.updateScene({
         appState: {
           currentItemOpacity: 100,
-          currentItemStrokeWidth: 2,
+          currentItemStrokeWidth: brushWidths.current!.pen,
           currentItemStrokeColor: '#171717',
           currentItemRoughness: 0,
         },
@@ -783,6 +816,7 @@ export default function App() {
       setSelected(Object.values(a.selectedElementIds).some(Boolean));
       setGrid(a.gridModeEnabled);
       setZoom(a.zoom.value);
+      if (t === 'freedraw') setStrokeWidth(a.currentItemStrokeWidth);
       const state = canvasState(a),
         sig = `${getSceneVersion(elements)}:${elements.length}:${JSON.stringify(state)}`;
       if (sig === signature.current) return;
@@ -793,6 +827,45 @@ export default function App() {
     },
     [initial],
   );
+  function changeWidth(pixels: number) {
+    if (!api.current || readonlyRef.current) return;
+    const width = pixels / INK_SCALE;
+    if (marker.current) {
+      brushWidths.current!.highlighter = width;
+      pref('marker-width', String(width));
+    } else {
+      brushWidths.current!.pen = width;
+      pref('pen-width', String(width));
+    }
+    setStrokeWidth(width);
+    api.current.updateScene({
+      appState: { currentItemStrokeWidth: width },
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+  }
+  function clearBoard() {
+    const editor = api.current;
+    if (!editor || readonlyRef.current) return;
+    const elements = editor.getSceneElementsIncludingDeleted();
+    editor.updateScene({
+      elements: deleteObjects(
+        elements,
+        new Set(elements.map((e) => e.id)),
+        false,
+      ),
+      appState: {
+        selectedElementIds: {},
+        selectedGroupIds: {},
+        editingGroupId: null,
+        editingTextElement: null,
+        newElement: null,
+        elementsToHighlight: null,
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    setModal(null);
+    setNotice('Board cleared. Use Undo to bring everything back.');
+  }
   function rename(value: string) {
     if (!board || readonlyRef.current) return;
     setBoard({ ...board, title: value });
@@ -948,6 +1021,15 @@ export default function App() {
         </div>
         <div className="header-actions">
           <button
+            className="icon-button clear-board"
+            aria-label="Clear board"
+            title="Clear board"
+            disabled={!initial || empty || readOnly || busy}
+            onClick={() => setModal('clear')}
+          >
+            <Trash2 size={17} />
+          </button>
+          <button
             className="button secondary boards-button"
             aria-label="Your boards"
             onClick={() => void openLibrary()}
@@ -996,7 +1078,7 @@ export default function App() {
       )}
       <main
         ref={canvasHost}
-        className="canvas-area"
+        className={`canvas-area ${tool === 'freedraw' || tool === 'highlighter' ? 'is-inking' : ''}`}
         aria-label="Whiteboard workspace"
         onDragOver={(e) => {
           e.preventDefault();
@@ -1023,6 +1105,7 @@ export default function App() {
                 currentItemFillStyle: 'solid',
                 currentItemRoundness: 'round',
                 currentItemOpacity: 100,
+                currentItemStrokeWidth: brushWidths.current!.pen,
               },
               scrollToContent:
                 initial.board.elements.length > 0 &&
@@ -1078,6 +1161,13 @@ export default function App() {
             }}
           >
             <MainMenu />
+            <Footer>
+              {!presentation && (
+                <div className="desktop-clock">
+                  <LocalClock />
+                </div>
+              )}
+            </Footer>
           </Excalidraw>
         ) : (
           <div className="opening-state">
@@ -1086,6 +1176,55 @@ export default function App() {
           </div>
         )}
         <canvas ref={inkCanvas} className="pen-ink-layer" aria-hidden="true" />
+        <div
+          ref={eraserCursor}
+          className="eraser-cursor"
+          hidden
+          aria-hidden="true"
+        >
+          <span>Release to erase</span>
+        </div>
+        {!presentation &&
+          !readOnly &&
+          !busy &&
+          (tool === 'freedraw' || tool === 'highlighter') && (
+            <div className="ink-properties">
+              <label htmlFor="ink-width">
+                {tool === 'highlighter' ? 'Marker width' : 'Pen width'}
+              </label>
+              <span className="width-preview" aria-hidden="true">
+                <i
+                  style={{
+                    height: Math.min(12, strokeWidth * INK_SCALE),
+                    opacity: tool === 'highlighter' ? 0.3 : 1,
+                  }}
+                />
+              </span>
+              <input
+                id="ink-width"
+                aria-label={
+                  tool === 'highlighter' ? 'Marker width' : 'Pen width'
+                }
+                type="range"
+                min={tool === 'highlighter' ? 8 : 0.5}
+                max={tool === 'highlighter' ? 80 : 12}
+                step={tool === 'highlighter' ? 1 : 0.25}
+                value={strokeWidth * INK_SCALE}
+                aria-valuetext={`${Number((strokeWidth * INK_SCALE).toFixed(2))} pixels`}
+                title="Width at 100% zoom; stylus pressure can vary it"
+                onChange={(e) => changeWidth(Number(e.target.value))}
+              />
+              <output htmlFor="ink-width">
+                {Number((strokeWidth * INK_SCALE).toFixed(2))}
+                <small> px</small>
+              </output>
+            </div>
+          )}
+        {!presentation && !readOnly && tool === 'eraser' && (
+          <div className="eraser-hint">
+            Hold to grow · Release to erase · Undo to restore
+          </div>
+        )}
         {!presentation && !readOnly && initial && (
           <div className="tool-dock" role="toolbar" aria-label="Drawing tools">
             {tools.map((t) => (
@@ -1242,6 +1381,7 @@ export default function App() {
             >
               <Plus size={16} />
             </button>
+            <LocalClock />
           </div>
         )}
         {busy && <div className="busy-shield" aria-hidden="true" />}
@@ -1340,6 +1480,23 @@ export default function App() {
           onImport={() => fileInput.current?.click()}
           onRescue={(d) => void rescue(d)}
         />
+      )}
+      {modal === 'clear' && (
+        <Dialog title="Clear this board?" onClose={closeModal}>
+          <p className="clear-description">
+            Remove every object from{' '}
+            <strong>{board?.title || 'this board'}</strong>, including locked
+            objects. You can use Undo to restore them during this session.
+          </p>
+          <div className="dialog-footer">
+            <button className="button secondary" onClick={closeModal}>
+              Keep board
+            </button>
+            <button className="button primary" onClick={clearBoard}>
+              Clear everything
+            </button>
+          </div>
+        </Dialog>
       )}
       {modal === 'export' && (
         <ExportDialog

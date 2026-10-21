@@ -1,4 +1,19 @@
 export type OfflineState = 'preparing' | 'ready' | 'unavailable';
+/** Retire only the removed app route; documents and all asset caches are untouched. */
+export async function retireLegacyRoute(
+  container: Pick<ServiceWorkerContainer, 'getRegistration'>,
+  origin: string,
+): Promise<boolean> {
+  try {
+    const scope = new URL('/FreePod/', origin).href;
+    const registration = await container.getRegistration(scope);
+    return registration?.scope === scope
+      ? await registration.unregister()
+      : false;
+  } catch {
+    return false;
+  }
+}
 export function setupPwa(
   onState: (state: OfflineState) => void,
   onUpdate: (apply: () => void) => void,
@@ -7,6 +22,12 @@ export function setupPwa(
     onState('unavailable');
     return;
   }
+  // A previously installed old-route worker must not keep redirecting a removed URL.
+  if (
+    new URL(import.meta.env.BASE_URL, window.location.href).pathname ===
+    '/FreeBoard/'
+  )
+    void retireLegacyRoute(navigator.serviceWorker, window.location.origin);
   let cancelled = false;
   navigator.serviceWorker
     .register(`${import.meta.env.BASE_URL}sw.js`)
