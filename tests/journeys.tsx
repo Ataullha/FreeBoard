@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { useRef, useState } from 'react';
 import { convertToExcalidrawElements } from '@excalidraw/excalidraw';
+import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { backupFor, makeBoard, defaultCanvas } from '../src/model/document';
 import { parseBackup } from '../src/io/validation';
 import '../src/styles.css';
@@ -625,6 +626,251 @@ function Journeys() {
         }
       },
     );
+    let controlCount = 0;
+    await record(
+      'Pen width slider persists across tools and creates a thin pressure stroke',
+      async () => {
+        const old = parseBackup(await (await exported()).text());
+        const image = old.elements.find((e) => e.type === 'image');
+        const elements: ExcalidrawElement[] = convertToExcalidrawElements(
+          [
+            {
+              type: 'rectangle',
+              id: 'eraser-target',
+              x: 345,
+              y: 240,
+              width: 30,
+              height: 30,
+              backgroundColor: '#dddddd',
+              fillStyle: 'solid',
+              label: { text: 'A', fontFamily: 2, fontSize: 12 },
+            },
+            {
+              type: 'rectangle',
+              id: 'locked-target',
+              x: 290,
+              y: 240,
+              width: 20,
+              height: 20,
+              backgroundColor: '#dddddd',
+              fillStyle: 'solid',
+              locked: true,
+            },
+            {
+              type: 'rectangle',
+              id: 'far-shape',
+              x: 700,
+              y: 400,
+              width: 80,
+              height: 60,
+            },
+            {
+              type: 'arrow',
+              id: 'kept-arrow',
+              x: 400,
+              y: 320,
+              points: [
+                [0, 0],
+                [250, 80],
+              ],
+              start: { id: 'eraser-target' },
+              end: { id: 'far-shape' },
+            },
+          ],
+          { regenerateIds: false },
+        );
+        if (image)
+          elements.push({ ...image, x: 820, y: 400, width: 60, height: 60 });
+        const testTitle = `Controls QA ${Date.now()}`;
+        await drop(
+          new (win().File)(
+            [
+              JSON.stringify(
+                backupFor(makeBoard(testTitle), {
+                  elements,
+                  appState: defaultCanvas(),
+                  files: old.files,
+                }),
+              ),
+            ],
+            'controls.freeboard.json',
+            { type: 'application/json' },
+          ),
+        );
+        await until(
+          () =>
+            doc().querySelector<HTMLInputElement>('#board-title')?.value ===
+            testTitle,
+          'Control board not opened',
+        );
+        await saved();
+        await button('Reset view');
+        await button('Pen (P)');
+        const slider = await until(
+          () =>
+            doc().querySelector<HTMLInputElement>(
+              'input[aria-label="Pen width"]',
+            ),
+          'Pen width slider missing',
+        );
+        const presets = doc().querySelector(
+          'fieldset:has(input[name="stroke-width"])',
+        );
+        assert(
+          !presets || win().getComputedStyle(presets).display === 'none',
+          'Confusing native width presets still visible for Pen',
+        );
+        input(slider, '1.5');
+        await pause(100);
+        await button('Rectangle (R)');
+        await button('Pen (P)');
+        assert(
+          doc().querySelector<HTMLInputElement>('input[aria-label="Pen width"]')
+            ?.value === '1.5',
+          'Pen width reset on tool change',
+        );
+        const w = win();
+        const emit = (
+          type: string,
+          x: number,
+          y: number,
+          id = 777,
+          kind = 'pen',
+        ) => {
+          const c =
+            doc().querySelector<HTMLCanvasElement>('canvas.interactive')!;
+          c.setPointerCapture = () => {};
+          c.hasPointerCapture = () => false;
+          const box = c.getBoundingClientRect();
+          c.dispatchEvent(
+            new w.PointerEvent(type, {
+              pointerId: id,
+              pointerType: kind,
+              isPrimary: true,
+              clientX: box.left + x,
+              clientY: box.top + y,
+              button: 0,
+              buttons: type === 'pointerup' ? 0 : 1,
+              pressure: 0.6,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        };
+        emit('pointerdown', 560, 180);
+        emit('pointermove', 580, 185);
+        emit('pointermove', 600, 180);
+        emit('pointerup', 620, 185);
+        await saved();
+        const backup = parseBackup(await (await exported()).text()),
+          stroke = backup.elements.find((e) => e.type === 'freedraw');
+        assert(
+          stroke && Math.abs(stroke.strokeWidth * 4.25 - 1.5) < 0.001,
+          'Slider did not affect actual pressure ink',
+        );
+        controlCount = backup.elements.length;
+        await button('Highlighter (M)');
+        assert(
+          doc().querySelector<HTMLInputElement>(
+            'input[aria-label="Marker width"]',
+          )?.value === '68',
+          'Marker default unexpectedly changed',
+        );
+        await button('Select (V)');
+      },
+    );
+    await record(
+      'Holding the mouse grows a circular eraser, preserves locks, and undoes in one step',
+      async () => {
+        await button('Object eraser (E)');
+        const w = win(),
+          c = doc().querySelector<HTMLCanvasElement>('canvas.interactive')!,
+          box = c.getBoundingClientRect();
+        c.setPointerCapture = () => {};
+        c.hasPointerCapture = () => false;
+        const event = (type: string) =>
+          c.dispatchEvent(
+            new w.PointerEvent(type, {
+              pointerId: 778,
+              pointerType: 'mouse',
+              clientX: box.left + 300,
+              clientY: box.top + 250,
+              button: 0,
+              buttons: type === 'pointerup' ? 0 : 1,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        event('pointerdown');
+        await pause(1750);
+        const cursor = doc().querySelector<HTMLElement>('.eraser-cursor')!;
+        assert(
+          !cursor.hidden && Number(cursor.dataset.radius) >= 50,
+          'Long hold did not grow the eraser',
+        );
+        event('pointerup');
+        await saved();
+        const removed = parseBackup(await (await exported()).text());
+        assert(
+          !removed.elements.some((e) => e.id === 'eraser-target') &&
+            removed.elements.some((e) => e.id === 'locked-target'),
+          'Growing eraser missed its target or erased a locked object',
+        );
+        const arrow = removed.elements.find((e) => e.id === 'kept-arrow');
+        assert(
+          arrow?.type === 'arrow' && arrow.startBinding === null,
+          'Connector retained a deleted target',
+        );
+        await button('Undo');
+        const undone = parseBackup(await (await exported()).text());
+        assert(
+          undone.elements.length === controlCount &&
+            undone.elements.some((e) => e.id === 'eraser-target'),
+          'One Undo failed to restore the whole eraser gesture',
+        );
+        await button('Redo');
+        const redone = parseBackup(await (await exported()).text());
+        assert(
+          redone.elements.length === removed.elements.length,
+          'Redo did not restore erasure',
+        );
+        controlCount = redone.elements.length;
+      },
+    );
+    await record(
+      'Clear board confirms, cancels, clears locked objects and images, and supports Undo/Redo',
+      async () => {
+        await button('Clear board');
+        await button('Keep board');
+        assert(
+          parseBackup(await (await exported()).text()).elements.length ===
+            controlCount,
+          'Cancelling Clear board changed the scene',
+        );
+        await button('Clear board');
+        await button('Clear everything');
+        await saved();
+        assert(
+          parseBackup(await (await exported()).text()).elements.length === 0,
+          'Clear board left objects behind',
+        );
+        await button('Undo');
+        const restored = parseBackup(await (await exported()).text());
+        assert(
+          restored.elements.length === controlCount &&
+            restored.elements.some((e) => e.id === 'locked-target') &&
+            Object.keys(restored.files).length === 1,
+          'Undo did not recover locked objects or image bytes',
+        );
+        await button('Redo');
+        assert(
+          parseBackup(await (await exported()).text()).elements.length === 0,
+          'Redo did not clear again',
+        );
+        await button('Undo');
+        await saved();
+      },
+    );
     await record(
       'Mobile and tablet controls stay named, in bounds and separate',
       async () => {
@@ -635,6 +881,24 @@ function Journeys() {
             'Preview width did not change',
           );
           await pause(250);
+          const clock = await until(
+            () =>
+              [...doc().querySelectorAll<HTMLElement>('.local-clock')].find(
+                (e) => e.getBoundingClientRect().width > 0,
+              ),
+            'Clock did not settle after resizing',
+          );
+          assert(
+            clock && /\d/.test(clock.textContent ?? ''),
+            'Visible local clock missing',
+          );
+          const clockBox = clock.getBoundingClientRect();
+          assert(
+            clockBox.left >= 0 &&
+              clockBox.right <= size &&
+              clockBox.bottom <= 740,
+            'Clock outside viewport',
+          );
           const controls = [
             ...doc().querySelectorAll<HTMLElement>(
               '.tool-dock button,.canvas-utilities button,.mobile-zoom button,.header-actions button',
@@ -669,7 +933,9 @@ function Journeys() {
               .getBoundingClientRect();
             if (history && history.width > 0)
               assert(
-                history.bottom <= utilities.top,
+                history.bottom <= utilities.top ||
+                  history.right <= utilities.left ||
+                  utilities.right <= history.left,
                 'Mobile history overlaps navigation',
               );
           }

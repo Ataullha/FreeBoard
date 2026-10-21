@@ -296,6 +296,41 @@ function Lab() {
       ).length;
       if (log.cancelDotTouchCount !== 28)
         throw Error('Cancel/dot/finger fallback regression');
+      await click('Object eraser (E)');
+      const longTasks: number[] = [];
+      const observer = new w.PerformanceObserver((list) =>
+        longTasks.push(...list.getEntries().map((entry) => entry.duration)),
+      );
+      observer.observe({ entryTypes: ['longtask'] });
+      const beforeErase = extra.elements.length,
+        downStarted = performance.now();
+      event('pointerdown', 999, 'mouse', x + 50, y + 50);
+      const downMs = performance.now() - downStarted;
+      await wait(1800);
+      const grownRadius = Number(
+        d.querySelector<HTMLElement>('.eraser-cursor')?.dataset.radius,
+      );
+      const upStarted = performance.now();
+      event('pointerup', 999, 'mouse', x + 50, y + 50);
+      const upMs = performance.now() - upStarted;
+      await wait(120);
+      observer.disconnect();
+      const erased = await exported();
+      if (erased.elements.length >= beforeErase || grownRadius < 50)
+        throw Error('600-object growing eraser did not remove objects');
+      await click('Undo');
+      const restoredErase = await exported();
+      if (restoredErase.elements.length !== beforeErase)
+        throw Error('Large-scene eraser was not one undo action');
+      log.growingEraser = {
+        sceneObjects: beforeErase,
+        grownRadius,
+        removedObjects: beforeErase - erased.elements.length,
+        pointerDownMs: downMs,
+        pointerUpMs: upMs,
+        longTaskDurationsMs: longTasks,
+        oneUndoRestoredAll: true,
+      };
       const exports: Record<string, unknown> = {};
       for (const format of ['png', 'svg'] as const) {
         const started = performance.now(),
