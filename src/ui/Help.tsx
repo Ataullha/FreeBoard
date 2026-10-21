@@ -97,7 +97,9 @@ export function Help({
           <h3>Draw and navigate</h3>
           <p>
             The eraser removes whole objects that it touches and skips locked
-            objects. It does not erase pixels. A highlighter stroke uses a
+            objects. With a mouse, keep holding to grow its circular area;
+            release to erase the highlighted objects. One Undo restores the
+            whole gesture. It does not erase pixels. A highlighter stroke uses a
             constant 30% opacity; separate overlapping strokes build up color.
           </p>
           <p>
@@ -113,6 +115,19 @@ export function Help({
             coalesced stylus samples where supported, with pressure-sensitive
             width. Palm contact is ignored during pen writing and briefly after
             pen hover; lift the pen away to resume finger gestures.
+          </p>
+          <h3>Writing and workspace</h3>
+          <p>
+            Use Pen width to choose 0.5–12 px for new pen strokes. The sample
+            and number show the base width at 100% zoom; pressure can vary it.
+            Marker width has its own 8–80 px slider. Both choices are remembered
+            in this browser. The clock beside zoom shows your device’s local
+            time.
+          </p>
+          <p>
+            Clear board is the bin button in the header. Confirm to remove
+            everything, including locked objects; choose Keep board to cancel.
+            Undo restores the cleared objects while the session remains open.
           </p>
           <h3>Backups and recovery</h3>
           <p>
