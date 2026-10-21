@@ -1,0 +1,18 @@
+{
+  "kind": "application-journeys",
+  "time": "2026-10-21T09:45:10.861Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "results": [
+    "PASS  Valid editable backup imports through the real drop handler",
+    "PASS  Keyboard tools use the same style presets as toolbar buttons",
+    "PASS  Local PNG insertion and editable export preserve image bytes",
+    "PASS  Bengali/English note editing and composition ignore drawing shortcuts",
+    "PASS  Text editing is one logical undo/redo action",
+    "PASS  Reload recovers saved text, objects and image; editable backup reopens",
+    "PASS  Board duplicate, trash and restore through workspace controls",
+    "PASS  Invalid import leaves current board intact with backup access",
+    "PASS  Storage write failure offers export; retry saves retained edits",
+    "PASS  Second tab receives conflict notice and cannot silently overwrite",
+    "PASS  Mobile and tablet controls stay named, in bounds and separate"
+  ]
+}
