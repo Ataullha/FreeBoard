@@ -216,6 +216,63 @@ function Lab() {
       },
     );
     await record(
+      'Editable clipboard objects paste safely and undo as one action',
+      async () => {
+        const b = await backup();
+        const source = b.elements.find((e) => e.id === strokeId)!;
+        const transfer = new w.DataTransfer();
+        transfer.setData(
+          'text/plain',
+          JSON.stringify({
+            type: 'excalidraw/clipboard',
+            elements: [source],
+            files: {},
+          }),
+        );
+        const canvas =
+          d.querySelector<HTMLCanvasElement>('canvas.interactive')!;
+        const bounds = canvas.getBoundingClientRect();
+        // Paste uses the engine's last hover position; the pen adapter buffers
+        // pen samples separately, so include the mouse hover a real paste has.
+        canvas.dispatchEvent(
+          new w.PointerEvent('pointermove', {
+            bubbles: true,
+            cancelable: true,
+            pointerId: 72,
+            pointerType: 'mouse',
+            isPrimary: true,
+            button: -1,
+            buttons: 0,
+            clientX: bounds.left + bounds.width * 0.7,
+            clientY: bounds.top + bounds.height * 0.65,
+          }),
+        );
+        await pause(250);
+        d.querySelector<HTMLElement>('.excalidraw')!.focus();
+        canvas.dispatchEvent(
+          new w.ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+          }),
+        );
+        await pause(600);
+        const pasted = await backup();
+        assert(
+          pasted.elements.filter((e) => e.type === 'freedraw' && !e.isDeleted)
+            .length === 2,
+          `Editable clipboard paste did not create a second stroke: ${d.querySelector('.demo-notice')?.textContent ?? ''}`,
+        );
+        await click('Undo');
+        assert(
+          (await backup()).elements.filter(
+            (e) => e.type === 'freedraw' && !e.isDeleted,
+          ).length === 1,
+          'Paste was not one undo step',
+        );
+      },
+    );
+    await record(
       'Independent starters retain their edits when switching templates',
       async () => {
         await click('02Find an idea');
@@ -336,7 +393,7 @@ function Lab() {
     w.HTMLAnchorElement.prototype.click = originalClick;
     const output = {
       passed: lines.filter((l) => l.startsWith('PASS')).length,
-      total: 9,
+      total: 10,
       results: lines,
       metrics,
     };
