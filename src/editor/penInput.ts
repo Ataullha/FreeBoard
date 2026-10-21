@@ -30,6 +30,7 @@ export function attachPenInput(
     hoverUntil = 0,
     space = false;
   const palms = new Set<number>();
+  const forwardedTouches = new Set<number>();
   const block = (e: Event) => {
     if (e.cancelable) e.preventDefault();
     e.stopImmediatePropagation();
@@ -105,6 +106,13 @@ export function attachPenInput(
   const input = (e: PointerEvent) => {
     const onCanvas = drawingTarget(e);
     if (e.pointerType === 'touch') {
+      // A touch admitted before pen proximity belongs to the native gesture.
+      // Always deliver its release so a later pen cannot strand that gesture.
+      if (
+        (e.type === 'pointerup' || e.type === 'pointercancel') &&
+        forwardedTouches.delete(e.pointerId)
+      )
+        return;
       if (
         palms.has(e.pointerId) ||
         ((stroke || performance.now() < hoverUntil) && onCanvas)
@@ -113,7 +121,8 @@ export function attachPenInput(
         if (e.type === 'pointerup' || e.type === 'pointercancel')
           palms.delete(e.pointerId);
         block(e);
-      }
+      } else if (e.type === 'pointerdown' && onCanvas)
+        forwardedTouches.add(e.pointerId);
       return;
     }
     if (e.pointerType !== 'pen') return;
@@ -182,6 +191,8 @@ export function attachPenInput(
   };
   const blur = () => {
     space = false;
+    palms.clear();
+    forwardedTouches.clear();
     finish();
   };
   const events = [
