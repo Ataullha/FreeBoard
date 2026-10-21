@@ -383,6 +383,48 @@ function Lab() {
       },
     );
     await record(
+      'All starter objects fit after mobile and desktop resizing',
+      async () => {
+        const checks: unknown[] = [];
+        for (const width of [320, 768, 1100]) {
+          frame.current!.style.width = `${width}px`;
+          await until(() => w.innerWidth === width);
+          for (const label of [
+            '01Teach a lesson',
+            '02Find an idea',
+            '03Connect the steps',
+          ]) {
+            await click(label);
+            await new Promise<void>((resolve) =>
+              w.requestAnimationFrame(() =>
+                w.requestAnimationFrame(() => resolve()),
+              ),
+            );
+            const b = await backup();
+            const canvas = d.querySelector('.demo-canvas')!;
+            const viewport = canvas.getBoundingClientRect();
+            const { scrollX, scrollY, zoom } = b.appState;
+            for (const element of b.elements.filter((e) => !e.isDeleted)) {
+              const left = (element.x + scrollX) * zoom.value;
+              const top = (element.y + scrollY) * zoom.value;
+              const right = left + element.width * zoom.value;
+              const bottom = top + element.height * zoom.value;
+              assert(
+                left >= -1 &&
+                  top >= -1 &&
+                  right <= viewport.width + 1 &&
+                  bottom <= viewport.height + 1,
+                `Starter clipped at ${width}: ${label}, ${element.type} (${left}, ${top}, ${right}, ${bottom}) in ${viewport.width} × ${viewport.height}`,
+              );
+            }
+            checks.push({ width, template: b.title, zoom: zoom.value });
+          }
+        }
+        frame.current!.style.width = '1100px';
+        metrics.framing = checks;
+      },
+    );
+    await record(
       'Preview editing leaves all saved board documents and assets unchanged',
       async () => {
         assert((await snapshot()) === before, 'Saved board data changed');
@@ -393,7 +435,7 @@ function Lab() {
     w.HTMLAnchorElement.prototype.click = originalClick;
     const output = {
       passed: lines.filter((l) => l.startsWith('PASS')).length,
-      total: 10,
+      total: 11,
       results: lines,
       metrics,
     };
