@@ -109,8 +109,10 @@ export function Help({
           </p>
           <p>
             Touch: draw with one finger, use two fingers to pan and pinch.
-            Choose Hand to pan with one finger. In pen mode, stylus pressure
-            changes the stroke width where the device supplies it.
+            Choose Hand to pan with one finger. Pen and highlighter strokes use
+            coalesced stylus samples where supported, with pressure-sensitive
+            width. Palm contact is ignored during pen writing and briefly after
+            pen hover; lift the pen away to resume finger gestures.
           </p>
           <h3>Backups and recovery</h3>
           <p>
