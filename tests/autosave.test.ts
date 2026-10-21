@@ -87,3 +87,43 @@ describe('autosave truthfulness and recovery', () => {
     await repo.close();
   });
 });
+
+describe('handwriting save scheduling', () => {
+  it('defers background writes while a pen is down, then saves after idle', async () => {
+    vi.useFakeTimers();
+    const repo = new BoardRepository(),
+      base = { ...makeBoard(), revision: 1 };
+    const checkpoint = vi.spyOn(repo, 'checkpoint').mockResolvedValue();
+    const save = vi
+      .spyOn(repo, 'save')
+      .mockImplementation(async (b) => ({ ...b, revision: b.revision + 1 }));
+    const a = new Autosave(repo, base, 'w', () => {});
+    a.capture(scene());
+    a.beginInteraction();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(checkpoint).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    a.capture(scene(5));
+    a.endInteraction();
+    await vi.advanceTimersByTimeAsync(700);
+    expect(checkpoint).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(a.dirty).toBe(false);
+    await a.dispose();
+    vi.useRealTimers();
+  });
+  it('coalesces queued checkpoints and skips an already recovered generation', async () => {
+    const repo = new BoardRepository(),
+      a = new Autosave(repo, { ...makeBoard(), revision: 1 }, 'w', () => {});
+    const checkpoint = vi.spyOn(repo, 'checkpoint').mockResolvedValue();
+    a.capture(scene());
+    await Promise.all(Array.from({ length: 30 }, () => a.checkpoint()));
+    expect(checkpoint).toHaveBeenCalledTimes(1);
+    await a.checkpoint();
+    expect(checkpoint).toHaveBeenCalledTimes(1);
+    a.capture(scene(2));
+    await a.checkpoint();
+    expect(checkpoint).toHaveBeenCalledTimes(2);
+    await a.dispose();
+  });
+});
