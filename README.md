@@ -20,9 +20,9 @@ Open your browser and start. No account, payment, API key, or backend required.
 
 ## A clear workspace
 
-- **Write and draw.** Pressure-sensitive stylus ink, pen, highlighter, shapes, attached arrows, multiline text, sticky notes, and local images.
-- **Keep editing.** Multiple selection, resize, rotate, group, lock, layering, copy/paste, and undo/redo.
-- **Make it yours.** A restrained black-and-white interface, bundled Inter typography, Bengali text support, useful shortcuts, and responsive controls.
+- **Write and draw.** Pressure-sensitive stylus ink, adjustable pen and marker width sliders, shapes, attached arrows, multiline text, sticky notes, and local images.
+- **Keep editing.** Multiple selection, resize, rotate, group, lock, layering, copy/paste, a hold-to-grow mouse eraser, undoable Clear board, and undo/redo.
+- **Make it yours.** A restrained black-and-white interface, bundled Inter typography, Bengali text support, a small local clock beside zoom, useful shortcuts, and responsive controls.
 - **Keep your work nearby.** IndexedDB autosave, recoverable trash, interrupted-session recovery, board thumbnails, and protection against stale writes from another tab.
 - **Take your ideas with you.** Editable JSON backups, PNG and SVG exports, selection export, and transparent backgrounds.
 - **Use it offline.** Installable PWA with locally bundled runtime assets. Updates wait for you to save and restart.
@@ -68,7 +68,7 @@ Board contents and images stay in this browser profile. FreeBoard has no analyti
 
 **Browser storage can be cleared. Download editable backups of important work.** Use **Export → Editable backup** to preserve objects, text, and images together. A different browser, device, or website origin has separate storage. “Saved on this device” appears only after the storage transaction succeeds. Recovery cannot guarantee the last unsaved input before a crash.
 
-The FreeBoard rename preserves the original database and preference keys. Legacy BoardPilot v1/v2 backups remain importable. The previous `/FreePod/` address is retained as a compatibility redirect to `/FreeBoard/` on the same origin.
+The FreeBoard rename preserves the original database and preference keys. Legacy BoardPilot v1/v2 backups remain importable. The application is hosted at `/FreeBoard/`; the earlier `/FreePod/` deployment and redirect have been removed. Saved boards stay in the same browser storage.
 
 ## Build and deploy
 
