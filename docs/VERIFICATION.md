@@ -2,6 +2,14 @@
 
 Release candidate 1.0.0 • 21 October 2026. Results are measurements and observations from this build session, not a certification or a guarantee on untested devices.
 
+## Interactive product preview and launch artwork
+
+Added `/preview.html` as a separate, responsive introduction to FreeBoard. The canonical `/` route still opens directly into the existing whiteboard. The preview starts with real screenshots and opens the production drawing engine on request. Its editor reuses the pressure-input and growing-eraser adapters, runs in memory, and downloads valid editable backups. Each starter retains its edits while switching in the tab. Reset affects only the current preview; the preview does not open the saved-board repository.
+
+All **ten browser acceptance checks passed**, covering three loaded posters, the real engine and Bengali/English starter, a 1.5 px pen stroke with ten pressure samples, native Undo/Redo, validated editable clipboard paste with one-action undo, separate template state, reset cancellation and confirmation, two attached flowchart arrows, controls at 320/390/768/1100 pixels, and unchanged saved documents/assets. Rapid template switching exposed a stale editor reference during early testing; separate keyed editor instances and a readiness gate fixed it before the final pass. See `verification/showcase-journeys.json`. The **67 automated tests in 11 suites** and production build also passed on this update. Physical-device limits below still apply.
+
+The 1200 × 630 PNG launch visual uses an actual application screenshot and bundled Inter typography. Its reusable Canvas artwork source and `share-card.html` are included for the owner to revise/export. Open Graph metadata on the main app and product preview references the local PNG. LinkedIn copy is a draft in `LAUNCH.md`; no social post was submitted. Social platforms can cache older link previews. Historical reports below retain their original build identifiers.
+
 ## Current workspace-controls update
 
 Added a device-local minute clock beside zoom on desktop and mobile, an explicit Clear board confirmation with one-action Undo/Redo, and independent persistent pen/marker width sliders. New pen strokes use a finer 2 px base width, with a 0.5–12 px slider; the marker keeps its previous default and transparency. The mouse object eraser starts at 9 px radius and grows after a 400 ms hold to a maximum 64 px radius. It previews pending targets, commits once on release, skips locks and cancels with Escape. Touch and stylus erasing remain native.
