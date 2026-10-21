@@ -1,6 +1,6 @@
 {
-  "passed": 10,
-  "total": 10,
+  "passed": 11,
+  "total": 11,
   "results": [
     "PASS Three real posters work before loading the drawing engine",
     "PASS Real editor opens and exports a valid Bengali/English lesson",
@@ -11,6 +11,7 @@
     "PASS Reset has a cancel path and restores only the current preview",
     "PASS Flowchart preview exports genuinely attached connectors",
     "PASS Preview controls fit desktop, tablet and mobile widths",
+    "PASS All starter objects fit after mobile and desktop resizing",
     "PASS Preview editing leaves all saved board documents and assets unchanged"
   ],
   "metrics": {
@@ -41,6 +42,53 @@
         "width": 1100,
         "controls": 13,
         "scrollWidth": 1085
+      }
+    ],
+    "framing": [
+      {
+        "width": 320,
+        "template": "Lesson preview",
+        "zoom": 0.2
+      },
+      {
+        "width": 320,
+        "template": "Brainstorm preview",
+        "zoom": 0.2
+      },
+      {
+        "width": 320,
+        "template": "Flowchart preview",
+        "zoom": 0.2
+      },
+      {
+        "width": 768,
+        "template": "Lesson preview",
+        "zoom": 0.6
+      },
+      {
+        "width": 768,
+        "template": "Brainstorm preview",
+        "zoom": 0.5
+      },
+      {
+        "width": 768,
+        "template": "Flowchart preview",
+        "zoom": 0.6
+      },
+      {
+        "width": 1100,
+        "template": "Lesson preview",
+        "zoom": 0.6
+      },
+      {
+        "width": 1100,
+        "template": "Brainstorm preview",
+        "zoom": 0.5
+      },
+      {
+        "width": 1100,
+        "template": "Flowchart preview",
+        "zoom": 0.5
       }
     ],
     "savedBoardsUnchanged": true
