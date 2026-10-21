@@ -1,0 +1,48 @@
+{
+  "passed": 10,
+  "total": 10,
+  "results": [
+    "PASS Three real posters work before loading the drawing engine",
+    "PASS Real editor opens and exports a valid Bengali/English lesson",
+    "PASS Fine-width stylus ink keeps pressure samples in the editable backup",
+    "PASS Native undo and redo preserve a whole preview stroke",
+    "PASS Editable clipboard objects paste safely and undo as one action",
+    "PASS Independent starters retain their edits when switching templates",
+    "PASS Reset has a cancel path and restores only the current preview",
+    "PASS Flowchart preview exports genuinely attached connectors",
+    "PASS Preview controls fit desktop, tablet and mobile widths",
+    "PASS Preview editing leaves all saved board documents and assets unchanged"
+  ],
+  "metrics": {
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "ink": {
+      "points": 10,
+      "pressures": 10,
+      "modelWidth": 0.35294117647058826
+    },
+    "connectedArrows": 2,
+    "layouts": [
+      {
+        "width": 320,
+        "controls": 13,
+        "scrollWidth": 305
+      },
+      {
+        "width": 390,
+        "controls": 13,
+        "scrollWidth": 375
+      },
+      {
+        "width": 768,
+        "controls": 13,
+        "scrollWidth": 753
+      },
+      {
+        "width": 1100,
+        "controls": 13,
+        "scrollWidth": 1085
+      }
+    ],
+    "savedBoardsUnchanged": true
+  }
+}
