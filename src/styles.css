@@ -312,6 +312,88 @@ input {
   z-index: 4;
   touch-action: manipulation;
 }
+.tool-dock.is-dragging {
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: grabbing !important;
+  user-select: none;
+  transition: none !important;
+}
+.tool-dock.is-vertical {
+  flex-direction: column;
+  width: auto;
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  gap: 2px;
+  padding: 5px;
+}
+.tool-dock.is-vertical::-webkit-scrollbar {
+  display: none;
+}
+.tool-dock.is-vertical .tool {
+  width: 40px;
+  height: 38px;
+  padding-bottom: 3px;
+}
+.tool-dock.is-vertical .tool svg {
+  width: 17px;
+  height: 17px;
+}
+.tool-dock.is-vertical .tool-key {
+  font-size: 8px;
+  bottom: 2px;
+}
+.tool-dock.is-vertical .tool-separator {
+  width: 24px;
+  height: 1px;
+  margin: 3px auto;
+}
+.tool-dock.is-vertical .tool-break {
+  margin-left: 0;
+  margin-top: 4px;
+}
+.tool-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #9c9c9c;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    background 0.12s,
+    color 0.12s;
+  flex: none;
+}
+.tool-drag-handle:hover {
+  background: #f3f3f3;
+  color: #333;
+}
+.tool-drag-handle:active,
+.tool-dock.is-dragging .tool-drag-handle {
+  cursor: grabbing;
+  color: var(--accent);
+}
+.tool-dock:not(.is-vertical) .tool-drag-handle {
+  width: 15px;
+  height: 45px;
+  margin-right: 1px;
+}
+.tool-dock.is-vertical .tool-drag-handle {
+  width: 40px;
+  height: 14px;
+  margin-bottom: 2px;
+}
+.tool-orientation {
+  color: #606060;
+}
+.tool-orientation:hover {
+  background: #f3f3f3;
+  color: #222;
+}
 .tool {
   position: relative;
   display: flex;
@@ -1234,6 +1316,16 @@ input[type='checkbox'] {
     padding: 6px;
     border-radius: 12px;
     max-width: calc(100% - 20px);
+  }
+  .tool-dock.is-vertical {
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+    grid-template-columns: none;
+    width: auto;
+  }
+  .tool-dock:not(.is-vertical) .tool-drag-handle {
+    display: none;
   }
   .tool {
     width: 42px;
