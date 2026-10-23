@@ -23,9 +23,12 @@ import {
   ChevronDown,
   Circle,
   CloudOff,
+  Columns2,
   Expand,
   FolderOpen,
   Grid2X2,
+  GripHorizontal,
+  GripVertical,
   Hand,
   Highlighter,
   ImagePlus,
@@ -36,6 +39,7 @@ import {
   Plus,
   Presentation,
   RectangleHorizontal,
+  Rows2,
   ShieldCheck,
   StickyNote,
   Type,
@@ -179,6 +183,149 @@ export default function App() {
     switching = useRef(false),
     channel = useRef<BroadcastChannel | null>(null),
     boardRef = useRef<BoardRecord | null>(null);
+  const [dockOrientation, setDockOrientation] = useState<
+    'horizontal' | 'vertical'
+  >(() =>
+    pref('toolbar-orientation') === 'vertical' ? 'vertical' : 'horizontal',
+  );
+  const [dockPosition, setDockPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(() => {
+    try {
+      const saved = pref('toolbar-position');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+          return parsed;
+        }
+      }
+    } catch {}
+    return null;
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const dockRef = useRef<HTMLDivElement>(null);
+
+  const startDrag = useCallback((e: React.PointerEvent | React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dockEl = dockRef.current;
+    const hostEl = canvasHost.current;
+    if (!dockEl || !hostEl) return;
+
+    const hostRect = hostEl.getBoundingClientRect();
+    const dockRect = dockEl.getBoundingClientRect();
+
+    const startDockX = dockRect.left - hostRect.left;
+    const startDockY = dockRect.top - hostRect.top;
+    const startPointerX = e.clientX;
+    const startPointerY = e.clientY;
+
+    setIsDragging(true);
+
+    let latestX = startDockX;
+    let latestY = startDockY;
+
+    const onMove = (ev: MouseEvent | PointerEvent) => {
+      const currentHostRect = hostEl.getBoundingClientRect();
+      const currentDockRect = dockEl.getBoundingClientRect();
+
+      const dx = ev.clientX - startPointerX;
+      const dy = ev.clientY - startPointerY;
+
+      const minX = 8;
+      const minY = 8;
+      const maxX = Math.max(
+        minX,
+        currentHostRect.width - currentDockRect.width - 8,
+      );
+      const maxY = Math.max(
+        minY,
+        currentHostRect.height - currentDockRect.height - 8,
+      );
+
+      latestX = Math.round(Math.max(minX, Math.min(startDockX + dx, maxX)));
+      latestY = Math.round(Math.max(minY, Math.min(startDockY + dy, maxY)));
+
+      setDockPosition({ x: latestX, y: latestY });
+    };
+
+    const onEnd = () => {
+      setIsDragging(false);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('pointerup', onEnd);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('pointercancel', onEnd);
+
+      pref('toolbar-position', JSON.stringify({ x: latestX, y: latestY }));
+    };
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('pointerup', onEnd);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('pointercancel', onEnd);
+  }, []);
+
+  const toggleOrientation = useCallback(() => {
+    setDockOrientation((prev) => {
+      const next = prev === 'horizontal' ? 'vertical' : 'horizontal';
+      pref('toolbar-orientation', next);
+
+      const hostEl = canvasHost.current;
+      if (hostEl) {
+        const hostRect = hostEl.getBoundingClientRect();
+        if (dockPosition === null) {
+          if (next === 'vertical') {
+            const verticalPos = { x: 18, y: 18 };
+            setDockPosition(verticalPos);
+            pref('toolbar-position', JSON.stringify(verticalPos));
+          }
+        } else {
+          const estWidth = next === 'vertical' ? 52 : 620;
+          const estHeight = next === 'vertical' ? 564 : 56;
+          const maxX = Math.max(8, hostRect.width - estWidth - 8);
+          const maxY = Math.max(8, hostRect.height - estHeight - 8);
+          const clamped = {
+            x: Math.round(Math.max(8, Math.min(dockPosition.x, maxX))),
+            y: Math.round(Math.max(8, Math.min(dockPosition.y, maxY))),
+          };
+          setDockPosition(clamped);
+          pref('toolbar-position', JSON.stringify(clamped));
+        }
+      }
+      return next;
+    });
+  }, [dockPosition]);
+
+  const resetDockPosition = useCallback(() => {
+    setDockPosition(null);
+    try {
+      localStorage.removeItem('boardpilot:toolbar-position');
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (!dockPosition || !canvasHost.current || !dockRef.current) return;
+      const hostRect = canvasHost.current.getBoundingClientRect();
+      const dockRect = dockRef.current.getBoundingClientRect();
+      const maxX = Math.max(8, hostRect.width - dockRect.width - 8);
+      const maxY = Math.max(8, hostRect.height - dockRect.height - 8);
+      const clampedX = Math.round(Math.max(8, Math.min(dockPosition.x, maxX)));
+      const clampedY = Math.round(Math.max(8, Math.min(dockPosition.y, maxY)));
+      if (clampedX !== dockPosition.x || clampedY !== dockPosition.y) {
+        const newPos = { x: clampedX, y: clampedY };
+        setDockPosition(newPos);
+        pref('toolbar-position', JSON.stringify(newPos));
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [dockPosition]);
   const closeModal = useCallback(() => setModal(null), []);
   const scene = useCallback(
     (): Scene =>
@@ -724,6 +871,12 @@ export default function App() {
         return;
       }
       if (readonlyRef.current || presentation) return;
+      if (!mod && e.altKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        toggleOrientation();
+        return;
+      }
       if (!mod && !e.altKey && !e.shiftKey) {
         const k = e.key.toLowerCase();
         const aliases: Record<string, Tool> = {
@@ -766,7 +919,16 @@ export default function App() {
       document.removeEventListener('keydown', key, true);
       document.removeEventListener('paste', paste, true);
     };
-  }, [addSticky, chooseTool, flush, insertImage, modal, presentation, busy]);
+  }, [
+    addSticky,
+    chooseTool,
+    flush,
+    insertImage,
+    modal,
+    presentation,
+    busy,
+    toggleOrientation,
+  ]);
   const bindEditor = useCallback((editor: ExcalidrawImperativeAPI) => {
     api.current = editor;
     for (const name of [
@@ -977,6 +1139,58 @@ export default function App() {
         : status === 'pending'
           ? 'Unsaved changes'
           : 'Not saved · backup now';
+  const isVertical = dockOrientation === 'vertical';
+  const dockStyle: React.CSSProperties | undefined = dockPosition
+    ? {
+        left: `${dockPosition.x}px`,
+        top: `${dockPosition.y}px`,
+        transform: 'none',
+        right: 'auto',
+        bottom: 'auto',
+      }
+    : isVertical
+      ? {
+          left: '18px',
+          top: '18px',
+          transform: 'none',
+        }
+      : undefined;
+
+  const floatingPanelStyle: React.CSSProperties | undefined = (() => {
+    if (!dockPosition && !isVertical) return undefined;
+    const host = canvasHost.current?.getBoundingClientRect();
+    const dock = dockRef.current?.getBoundingClientRect();
+    if (!host || !dock) return undefined;
+
+    const dockLeft = dock.left - host.left;
+    const dockTop = dock.top - host.top;
+
+    if (isVertical) {
+      const panelWidth = 240;
+      const placeRight = dockLeft + dock.width + 10;
+      const left =
+        placeRight + panelWidth > host.width - 10
+          ? Math.max(10, dockLeft - panelWidth - 10)
+          : placeRight;
+      const top = Math.max(10, Math.min(dockTop + 54, host.height - 60));
+      return {
+        left: `${Math.round(left)}px`,
+        top: `${Math.round(top)}px`,
+        transform: 'none',
+      };
+    } else {
+      const centerX = dockLeft + dock.width / 2;
+      let top = dockTop + dock.height + 10;
+      if (top + 50 > host.height) {
+        top = Math.max(10, dockTop - 52);
+      }
+      return {
+        left: `${Math.round(centerX)}px`,
+        top: `${Math.round(top)}px`,
+        transform: 'translateX(-50%)',
+      };
+    }
+  })();
   return (
     <div
       className={`app-shell ${presentation ? 'is-presenting' : ''}`}
@@ -1188,7 +1402,7 @@ export default function App() {
           !readOnly &&
           !busy &&
           (tool === 'freedraw' || tool === 'highlighter') && (
-            <div className="ink-properties">
+            <div className="ink-properties" style={floatingPanelStyle}>
               <label htmlFor="ink-width">
                 {tool === 'highlighter' ? 'Marker width' : 'Pen width'}
               </label>
@@ -1221,12 +1435,49 @@ export default function App() {
             </div>
           )}
         {!presentation && !readOnly && tool === 'eraser' && (
-          <div className="eraser-hint">
+          <div className="eraser-hint" style={floatingPanelStyle}>
             Hold to grow · Release to erase · Undo to restore
           </div>
         )}
         {!presentation && !readOnly && initial && (
-          <div className="tool-dock" role="toolbar" aria-label="Drawing tools">
+          <div
+            ref={dockRef}
+            className={`tool-dock ${dockOrientation === 'vertical' ? 'is-vertical' : ''} ${isDragging ? 'is-dragging' : ''}`}
+            role="toolbar"
+            aria-label="Drawing tools"
+            style={dockStyle}
+            onPointerDown={(e) => {
+              if ((e.target as HTMLElement).closest('button, input, textarea'))
+                return;
+              startDrag(e);
+            }}
+            onMouseDown={(e) => {
+              if ((e.target as HTMLElement).closest('button, input, textarea'))
+                return;
+              startDrag(e);
+            }}
+            onDoubleClick={(e) => {
+              if ((e.target as HTMLElement).closest('button, input, textarea'))
+                return;
+              resetDockPosition();
+            }}
+          >
+            <div
+              className="tool-drag-handle"
+              role="button"
+              tabIndex={0}
+              aria-label="Drag toolbar to move. Double-click to reset."
+              title="Drag to move · Double-click to reset"
+              onPointerDown={startDrag}
+              onMouseDown={startDrag}
+              onDoubleClick={resetDockPosition}
+            >
+              {dockOrientation === 'vertical' ? (
+                <GripHorizontal size={15} />
+              ) : (
+                <GripVertical size={15} />
+              )}
+            </div>
             {tools.map((t) => (
               <button
                 key={t.id}
@@ -1258,6 +1509,29 @@ export default function App() {
             >
               <ImagePlus size={19} />
               <span className="tool-key">I</span>
+            </button>
+            <span className="tool-separator" />
+            <button
+              type="button"
+              className="tool tool-orientation"
+              aria-label={
+                dockOrientation === 'vertical'
+                  ? 'Switch to horizontal toolbar (Alt+O)'
+                  : 'Switch to vertical toolbar (Alt+O)'
+              }
+              title={
+                dockOrientation === 'vertical'
+                  ? 'Switch to horizontal toolbar · Alt+O'
+                  : 'Switch to vertical toolbar · Alt+O'
+              }
+              onClick={toggleOrientation}
+            >
+              {dockOrientation === 'vertical' ? (
+                <Rows2 size={18} />
+              ) : (
+                <Columns2 size={18} />
+              )}
+              <span className="tool-key">⌥O</span>
             </button>
           </div>
         )}
